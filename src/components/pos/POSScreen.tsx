@@ -270,7 +270,7 @@ export function POSScreen() {
   const total = subtotal - discountValue;
 
   return (
-    <div className="h-screen flex flex-col">
+    <div className="h-screen flex flex-col overflow-hidden">
       <POSHeader
         register={register}
         saleNumber={saleNumber}
@@ -301,13 +301,13 @@ export function POSScreen() {
             />
           </div>
 
-          <div className="flex-1 overflow-y-auto">
+          <div className="flex-1 overflow-y-auto pr-2">
             <ProductGrid products={filteredProducts} onSelectProduct={addToCart} />
           </div>
         </div>
 
         {/* Right side - Cart */}
-        <div className="w-96 bg-card border-l border-border hidden lg:block">
+        <div className="w-[420px] glass-card rounded-none border-l border-border/30 hidden lg:block">
           <Cart
             items={cartItems}
             customer={customer}
@@ -330,12 +330,15 @@ export function POSScreen() {
         {cartItems.length > 0 && (
           <button
             onClick={handleCheckout}
-            className="lg:hidden fixed bottom-4 right-4 left-4 bg-primary text-primary-foreground py-4 px-6 rounded-xl shadow-lg flex items-center justify-between animate-slide-in-bottom"
+            className="fab lg:hidden animate-slide-in-bottom"
           >
-            <span className="font-medium">
-              {cartItems.reduce((sum, item) => sum + item.quantity, 0)} itens
+            <span className="flex items-center gap-2">
+              <span className="w-8 h-8 rounded-xl bg-white/20 flex items-center justify-center font-bold">
+                {cartItems.reduce((sum, item) => sum + item.quantity, 0)}
+              </span>
+              <span>itens</span>
             </span>
-            <span className="font-bold text-lg">
+            <span className="font-bold text-xl font-mono">
               R$ {total.toFixed(2).replace('.', ',')}
             </span>
           </button>
