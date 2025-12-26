@@ -14,7 +14,8 @@ export default {
     },
     extend: {
       fontFamily: {
-        sans: ['Inter', 'system-ui', 'sans-serif'],
+        sans: ['Space Grotesk', 'system-ui', 'sans-serif'],
+        mono: ['JetBrains Mono', 'monospace'],
       },
       colors: {
         border: "hsl(var(--border))",
@@ -70,6 +71,8 @@ export default {
         },
       },
       borderRadius: {
+        "2xl": "1rem",
+        "3xl": "1.5rem",
         lg: "var(--radius)",
         md: "calc(var(--radius) - 2px)",
         sm: "calc(var(--radius) - 4px)",
@@ -95,17 +98,34 @@ export default {
           "0%, 100%": { transform: "translateY(0)" },
           "50%": { transform: "translateY(-5px)" },
         },
+        "pulse-scale": {
+          "0%, 100%": { transform: "scale(1)" },
+          "50%": { transform: "scale(1.05)" },
+        },
+        "gradient-shift": {
+          "0%, 100%": { backgroundPosition: "0% 50%" },
+          "50%": { backgroundPosition: "100% 50%" },
+        },
       },
       animation: {
         "accordion-down": "accordion-down 0.2s ease-out",
         "accordion-up": "accordion-up 0.2s ease-out",
-        "slide-in-right": "slide-in-right 0.3s ease-out",
-        "slide-in-bottom": "slide-in-bottom 0.3s ease-out",
+        "slide-in-right": "slide-in-right 0.4s cubic-bezier(0.34, 1.56, 0.64, 1)",
+        "slide-in-bottom": "slide-in-bottom 0.4s cubic-bezier(0.34, 1.56, 0.64, 1)",
         "bounce-subtle": "bounce-subtle 0.5s ease-in-out",
+        "pulse-scale": "pulse-scale 2s ease-in-out infinite",
+        "gradient-shift": "gradient-shift 3s ease infinite",
       },
       boxShadow: {
-        glow: "0 0 20px hsl(var(--primary) / 0.3)",
-        "glow-lg": "0 0 40px hsl(var(--primary) / 0.4)",
+        glow: "0 0 30px hsl(var(--primary) / 0.4)",
+        "glow-lg": "0 0 60px hsl(var(--primary) / 0.5)",
+        "glow-accent": "0 0 30px hsl(var(--accent) / 0.4)",
+        neon: "0 0 5px currentColor, 0 0 20px currentColor",
+        elevated: "0 20px 50px hsl(0 0% 0% / 0.4)",
+        glass: "0 8px 32px hsl(0 0% 0% / 0.3), inset 0 1px 0 0 hsl(0 0% 100% / 0.05)",
+      },
+      backdropBlur: {
+        xs: "2px",
       },
     },
   },
