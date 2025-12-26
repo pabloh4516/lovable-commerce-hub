@@ -1,0 +1,140 @@
+import { 
+  Clock, 
+  DollarSign, 
+  ArrowDownCircle, 
+  ArrowUpCircle,
+  Lock,
+  Keyboard,
+  Search
+} from 'lucide-react';
+import { CashRegister } from '@/types/pos';
+
+interface POSHeaderProps {
+  register: CashRegister | null;
+  saleNumber: number;
+  onOpenRegister: () => void;
+  onCloseRegister: () => void;
+  onWithdrawal: () => void;
+  onDeposit: () => void;
+  onPriceCheck: () => void;
+  onShowShortcuts: () => void;
+}
+
+export function POSHeader({
+  register,
+  saleNumber,
+  onOpenRegister,
+  onCloseRegister,
+  onWithdrawal,
+  onDeposit,
+  onPriceCheck,
+  onShowShortcuts,
+}: POSHeaderProps) {
+  const isOpen = register?.status === 'open';
+
+  const formatTime = (date: Date) => {
+    return date.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
+  };
+
+  const formatCurrency = (value: number) => `R$ ${value.toFixed(2).replace('.', ',')}`;
+
+  return (
+    <div className="h-14 bg-card border-b border-border flex items-center justify-between px-4">
+      {/* Left - Register status */}
+      <div className="flex items-center gap-4">
+        {isOpen ? (
+          <>
+            <div className="flex items-center gap-2">
+              <div className="w-2 h-2 rounded-full bg-success animate-pulse" />
+              <span className="text-sm font-medium">Caixa #{register?.number}</span>
+            </div>
+            <div className="h-4 w-px bg-border" />
+            <div className="flex items-center gap-2 text-sm text-muted-foreground">
+              <Clock className="h-4 w-4" />
+              Aberto às {formatTime(register!.openedAt)}
+            </div>
+            <div className="h-4 w-px bg-border" />
+            <div className="flex items-center gap-2 text-sm">
+              <DollarSign className="h-4 w-4 text-success" />
+              <span className="text-muted-foreground">Em caixa:</span>
+              <span className="font-medium text-success">{formatCurrency(register!.totalCash)}</span>
+            </div>
+          </>
+        ) : (
+          <div className="flex items-center gap-2 text-warning">
+            <Lock className="h-4 w-4" />
+            <span className="font-medium">Caixa Fechado</span>
+          </div>
+        )}
+      </div>
+
+      {/* Center - Sale number */}
+      <div className="absolute left-1/2 -translate-x-1/2">
+        <div className="bg-secondary px-4 py-1.5 rounded-full">
+          <span className="text-sm text-muted-foreground">Venda #</span>
+          <span className="font-bold text-lg ml-1">{saleNumber.toString().padStart(6, '0')}</span>
+        </div>
+      </div>
+
+      {/* Right - Actions */}
+      <div className="flex items-center gap-2">
+        <button
+          onClick={onPriceCheck}
+          className="flex items-center gap-2 px-3 py-1.5 rounded-lg text-sm hover:bg-secondary transition-colors"
+        >
+          <Search className="h-4 w-4" />
+          <span className="hidden md:inline">Consulta (F2)</span>
+        </button>
+
+        {isOpen && (
+          <>
+            <button
+              onClick={onWithdrawal}
+              className="flex items-center gap-2 px-3 py-1.5 rounded-lg text-sm text-destructive hover:bg-destructive/10 transition-colors"
+            >
+              <ArrowDownCircle className="h-4 w-4" />
+              <span className="hidden md:inline">Sangria (F10)</span>
+            </button>
+            <button
+              onClick={onDeposit}
+              className="flex items-center gap-2 px-3 py-1.5 rounded-lg text-sm text-success hover:bg-success/10 transition-colors"
+            >
+              <ArrowUpCircle className="h-4 w-4" />
+              <span className="hidden md:inline">Suprimento (F11)</span>
+            </button>
+          </>
+        )}
+
+        <div className="h-4 w-px bg-border" />
+
+        <button
+          onClick={onShowShortcuts}
+          className="flex items-center gap-2 px-3 py-1.5 rounded-lg text-sm hover:bg-secondary transition-colors"
+        >
+          <Keyboard className="h-4 w-4" />
+          <span className="hidden md:inline">Atalhos (F1)</span>
+        </button>
+
+        <div className="h-4 w-px bg-border" />
+
+        {isOpen ? (
+          <button
+            onClick={onCloseRegister}
+            className="flex items-center gap-2 px-4 py-1.5 rounded-lg text-sm bg-warning/10 text-warning hover:bg-warning/20 transition-colors font-medium"
+          >
+            <Lock className="h-4 w-4" />
+            Fechar Caixa
+          </button>
+        ) : (
+          <button
+            onClick={onOpenRegister}
+            className="flex items-center gap-2 px-4 py-1.5 rounded-lg text-sm bg-success text-success-foreground hover:bg-success/90 transition-colors font-medium"
+          >
+            <DollarSign className="h-4 w-4" />
+            Abrir Caixa
+          </button>
+        )}
+      </div>
+    </div>
+  );
+}
