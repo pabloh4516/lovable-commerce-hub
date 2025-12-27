@@ -1,9 +1,12 @@
 import { useState, useMemo, useCallback } from 'react';
 import { ProductSearch } from './ProductSearch';
 import { QuickCategories } from './QuickCategories';
-import { QuickProductsBar } from './QuickProductsBar';
 import { ProductGrid } from './ProductGrid';
-import { Cart } from './Cart';
+import { SaleItemsTable } from './SaleItemsTable';
+import { LastItemAdded } from './LastItemAdded';
+import { TotalsPanel } from './TotalsPanel';
+import { ShortcutsBar } from './ShortcutsBar';
+import { SidePanel } from './SidePanel';
 import { PaymentModal } from './PaymentModal';
 import { POSHeader } from './POSHeader';
 import { OpenRegisterModal } from './OpenRegisterModal';
@@ -20,6 +23,8 @@ import { CartItem, Product, PaymentMethod, Customer, POSModalType } from '@/type
 import { useCashRegister } from '@/hooks/useCashRegister';
 import { useKeyboardShortcuts } from '@/hooks/useKeyboardShortcuts';
 import { toast } from 'sonner';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { LayoutGrid, List } from 'lucide-react';
 
 export function POSScreen() {
   const { register, isOpen, openRegister, closeRegister, addSale, addWithdrawal, addDeposit } = useCashRegister();
@@ -33,6 +38,7 @@ export function POSScreen() {
   const [totalDiscountType, setTotalDiscountType] = useState<'percent' | 'value'>('percent');
   const [saleNumber, setSaleNumber] = useState(1);
   const [pendingProduct, setPendingProduct] = useState<Product | null>(null);
+  const [viewMode, setViewMode] = useState<'items' | 'products'>('items');
 
   // Modal states
   const [activeModal, setActiveModal] = useState<POSModalType | null>(null);
@@ -43,6 +49,10 @@ export function POSScreen() {
     const category = categories.find((c) => c.id === selectedCategory);
     return products.filter((p) => p.category === category?.name);
   }, [selectedCategory]);
+
+  const lastItem = useMemo(() => {
+    return cartItems.length > 0 ? cartItems[cartItems.length - 1] : null;
+  }, [cartItems]);
 
   const closeModal = useCallback(() => {
     setActiveModal(null);
@@ -270,7 +280,7 @@ export function POSScreen() {
   const total = subtotal - discountValue;
 
   return (
-    <div className="h-screen flex flex-col overflow-hidden">
+    <div className="h-screen flex flex-col overflow-hidden bg-background">
       <POSHeader
         register={register}
         saleNumber={saleNumber}
@@ -283,45 +293,112 @@ export function POSScreen() {
       />
 
       <div className="flex-1 flex overflow-hidden">
-        {/* Left side - Products */}
-        <div className="flex-1 flex flex-col p-4 lg:p-6 overflow-hidden">
-          <div className="mb-4">
+        {/* Left side - Main Area */}
+        <div className="flex-1 flex flex-col overflow-hidden">
+          {/* Search Bar */}
+          <div className="p-4 pb-2 border-b border-border">
             <ProductSearch products={products} onSelectProduct={addToCart} />
           </div>
 
-          <div className="mb-4">
-            <QuickProductsBar products={quickProducts} onSelectProduct={addToCart} />
-          </div>
+          {/* View Tabs */}
+          <Tabs value={viewMode} onValueChange={(v) => setViewMode(v as 'items' | 'products')} className="flex-1 flex flex-col overflow-hidden">
+            <div className="px-4 py-2 border-b border-border flex items-center justify-between">
+              <TabsList className="h-9">
+                <TabsTrigger value="items" className="gap-2">
+                  <List className="w-4 h-4" />
+                  Itens da Venda
+                </TabsTrigger>
+                <TabsTrigger value="products" className="gap-2">
+                  <LayoutGrid className="w-4 h-4" />
+                  Produtos
+                </TabsTrigger>
+              </TabsList>
+              
+              {viewMode === 'products' && (
+                <QuickCategories
+                  categories={categories}
+                  selectedCategory={selectedCategory}
+                  onSelectCategory={setSelectedCategory}
+                />
+              )}
+            </div>
 
-          <div className="mb-4">
-            <QuickCategories
-              categories={categories}
-              selectedCategory={selectedCategory}
-              onSelectCategory={setSelectedCategory}
+            <TabsContent value="items" className="flex-1 flex flex-col overflow-hidden m-0 p-0">
+              {/* Last Item Added */}
+              <div className="p-4 pb-2">
+                <LastItemAdded item={lastItem} />
+              </div>
+
+              {/* Sale Items Table */}
+              <div className="flex-1 overflow-hidden">
+                <SaleItemsTable
+                  items={cartItems}
+                  selectedItemId={selectedItem?.id || null}
+                  onSelectItem={setSelectedItem}
+                  onRemoveItem={removeItem}
+                />
+              </div>
+
+              {/* Totals Panel */}
+              <div className="p-4 pt-2">
+                <TotalsPanel
+                  items={cartItems}
+                  totalDiscount={totalDiscount}
+                  totalDiscountType={totalDiscountType}
+                />
+              </div>
+            </TabsContent>
+
+            <TabsContent value="products" className="flex-1 overflow-y-auto m-0 p-4">
+              <ProductGrid products={filteredProducts} onSelectProduct={addToCart} />
+            </TabsContent>
+          </Tabs>
+
+          {/* Shortcuts Bar */}
+          <div className="border-t border-border bg-card">
+            <ShortcutsBar
+              onF1={() => setActiveModal('shortcuts')}
+              onF2={() => setActiveModal('priceCheck')}
+              onF3={() => selectedItem && setActiveModal('quantity')}
+              onF4={() => selectedItem?.product.isWeighted && setActiveModal('weight')}
+              onF5={() => selectedItem && setActiveModal('discount')}
+              onF6={() => cartItems.length > 0 && setActiveModal('discount')}
+              onF7={() => setActiveModal('customer')}
+              onF8={() => selectedItem && removeItem(selectedItem.id)}
+              onF9={() => cartItems.length > 0 && clearCart()}
+              onF10={() => isOpen && (setMovementType('withdrawal'), setActiveModal('withdrawal'))}
+              onF11={() => isOpen && (setMovementType('deposit'), setActiveModal('deposit'))}
+              onF12={handleCheckout}
+              disabled={{
+                F3: !selectedItem,
+                F4: !selectedItem?.product.isWeighted,
+                F5: !selectedItem,
+                F6: cartItems.length === 0,
+                F8: !selectedItem,
+                F9: cartItems.length === 0,
+                F10: !isOpen,
+                F11: !isOpen,
+                F12: cartItems.length === 0,
+              }}
             />
-          </div>
-
-          <div className="flex-1 overflow-y-auto pr-2">
-            <ProductGrid products={filteredProducts} onSelectProduct={addToCart} />
           </div>
         </div>
 
-        {/* Right side - Cart */}
-        <div className="w-[420px] glass-card rounded-none border-l border-border/30 hidden lg:block">
-          <Cart
-            items={cartItems}
+        {/* Right side - Side Panel */}
+        <div className="w-[340px] hidden lg:block">
+          <SidePanel
             customer={customer}
             customerCpf={customerCpf}
-            totalDiscount={totalDiscount}
-            totalDiscountType={totalDiscountType}
-            onUpdateQuantity={updateQuantity}
-            onRemoveItem={removeItem}
-            onClearCart={clearCart}
-            onCheckout={handleCheckout}
-            onSelectItem={setSelectedItem}
-            selectedItemId={selectedItem?.id || null}
+            categories={categories}
+            quickProducts={quickProducts}
+            selectedCategory={selectedCategory}
+            onSelectCategory={setSelectedCategory}
+            onSelectProduct={addToCart}
             onOpenCustomer={() => setActiveModal('customer')}
             onOpenDiscount={() => setActiveModal('discount')}
+            onCheckout={handleCheckout}
+            total={total}
+            itemCount={cartItems.length}
             isRegisterOpen={isOpen}
           />
         </div>
@@ -330,15 +407,15 @@ export function POSScreen() {
         {cartItems.length > 0 && (
           <button
             onClick={handleCheckout}
-            className="fab lg:hidden animate-slide-in-bottom"
+            className="fixed bottom-4 left-4 right-4 lg:hidden h-16 bg-primary text-primary-foreground rounded-lg flex items-center justify-between px-6 font-semibold shadow-lg"
           >
             <span className="flex items-center gap-2">
-              <span className="w-8 h-8 rounded-xl bg-white/20 flex items-center justify-center font-bold">
-                {cartItems.reduce((sum, item) => sum + item.quantity, 0)}
+              <span className="w-8 h-8 rounded-lg bg-primary-foreground/20 flex items-center justify-center font-bold tabular-nums">
+                {cartItems.length}
               </span>
               <span>itens</span>
             </span>
-            <span className="font-bold text-xl font-mono">
+            <span className="text-xl font-bold tabular-nums">
               R$ {total.toFixed(2).replace('.', ',')}
             </span>
           </button>

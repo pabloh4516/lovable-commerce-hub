@@ -1,18 +1,18 @@
 import { Product, Category, DashboardStats, Customer } from '@/types/pos';
 
 export const categories: Category[] = [
-  { id: '1', name: 'Bebidas', icon: '🥤', color: 'hsl(221 83% 53%)' },
-  { id: '2', name: 'Alimentos', icon: '🍔', color: 'hsl(38 92% 50%)' },
-  { id: '3', name: 'Limpeza', icon: '🧹', color: 'hsl(142 76% 36%)' },
-  { id: '4', name: 'Higiene', icon: '🧴', color: 'hsl(280 83% 53%)' },
-  { id: '5', name: 'Doces', icon: '🍫', color: 'hsl(350 83% 53%)' },
-  { id: '6', name: 'Laticínios', icon: '🥛', color: 'hsl(200 83% 53%)' },
-  { id: '7', name: 'Padaria', icon: '🥖', color: 'hsl(30 83% 53%)' },
-  { id: '8', name: 'Frios', icon: '🧀', color: 'hsl(45 83% 53%)' },
-  { id: '9', name: 'Hortifruti', icon: '🥬', color: 'hsl(120 60% 40%)' },
-  { id: '10', name: 'Carnes', icon: '🥩', color: 'hsl(0 70% 50%)' },
-  { id: '11', name: 'Congelados', icon: '🧊', color: 'hsl(200 90% 60%)' },
-  { id: '12', name: 'Outros', icon: '📦', color: 'hsl(0 0% 50%)' },
+  { id: '1', name: 'Bebidas', icon: 'cup-soda', color: 'hsl(221 83% 53%)' },
+  { id: '2', name: 'Alimentos', icon: 'utensils', color: 'hsl(38 92% 50%)' },
+  { id: '3', name: 'Limpeza', icon: 'sparkles', color: 'hsl(142 76% 36%)' },
+  { id: '4', name: 'Higiene', icon: 'heart-pulse', color: 'hsl(280 83% 53%)' },
+  { id: '5', name: 'Doces', icon: 'candy', color: 'hsl(350 83% 53%)' },
+  { id: '6', name: 'Laticínios', icon: 'milk', color: 'hsl(200 83% 53%)' },
+  { id: '7', name: 'Padaria', icon: 'croissant', color: 'hsl(30 83% 53%)' },
+  { id: '8', name: 'Frios', icon: 'beef', color: 'hsl(45 83% 53%)' },
+  { id: '9', name: 'Hortifruti', icon: 'apple', color: 'hsl(120 60% 40%)' },
+  { id: '10', name: 'Carnes', icon: 'beef', color: 'hsl(0 70% 50%)' },
+  { id: '11', name: 'Congelados', icon: 'snowflake', color: 'hsl(200 90% 60%)' },
+  { id: '12', name: 'Outros', icon: 'package', color: 'hsl(0 0% 50%)' },
 ];
 
 export const products: Product[] = [

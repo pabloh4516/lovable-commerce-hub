@@ -12,33 +12,15 @@ export function QuickProductsBar({ products, onSelectProduct }: QuickProductsBar
         <button
           key={product.id}
           onClick={() => onSelectProduct(product)}
-          className="shrink-0 flex flex-col items-center justify-center w-24 h-24 rounded-xl bg-secondary hover:bg-muted border border-border transition-all duration-200 active:scale-95"
+          className="quick-product-btn shrink-0 flex-col items-start w-28 h-auto py-3"
         >
-          <span className="text-2xl mb-1">{getCategoryEmoji(product.category)}</span>
-          <span className="text-xs font-medium text-center line-clamp-2 px-1">{product.name}</span>
-          <span className="text-xs text-primary font-bold mt-1">
+          <span className="text-[10px] font-mono text-muted-foreground">{product.code}</span>
+          <span className="text-xs font-medium text-left line-clamp-2 w-full">{product.name}</span>
+          <span className="text-sm font-semibold tabular-nums mt-1">
             R$ {product.price.toFixed(2).replace('.', ',')}
           </span>
         </button>
       ))}
     </div>
   );
-}
-
-function getCategoryEmoji(category: string): string {
-  const emojis: Record<string, string> = {
-    Bebidas: '🥤',
-    Alimentos: '🍔',
-    Limpeza: '🧹',
-    Higiene: '🧴',
-    Doces: '🍫',
-    Laticínios: '🥛',
-    Padaria: '🥖',
-    Frios: '🧀',
-    Hortifruti: '🥬',
-    Carnes: '🥩',
-    Congelados: '🧊',
-    Outros: '📦',
-  };
-  return emojis[category] || '📦';
 }
