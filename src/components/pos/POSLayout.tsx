@@ -22,8 +22,10 @@ export function POSLayout({
     return (
       <div className="h-screen flex items-center justify-center bg-background">
         <div className="flex flex-col items-center gap-4">
-          <Loader2 className="w-10 h-10 animate-spin text-primary" />
-          <p className="text-muted-foreground text-sm">Carregando PDV...</p>
+          <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-primary to-primary/80 flex items-center justify-center animate-pulse">
+            <Loader2 className="w-8 h-8 animate-spin text-primary-foreground" />
+          </div>
+          <p className="text-muted-foreground font-medium">Carregando PDV...</p>
         </div>
       </div>
     );
@@ -42,7 +44,7 @@ export function POSLayout({
         </div>
 
         {/* Right Panel - Cart/Actions (Hidden on mobile) */}
-        <div className="w-[380px] hidden lg:flex flex-col border-l border-border bg-card">
+        <div className="w-[400px] hidden lg:flex flex-col border-l border-border bg-card shadow-xl">
           {rightPanel}
         </div>
       </div>

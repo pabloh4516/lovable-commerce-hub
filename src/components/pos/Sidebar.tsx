@@ -6,7 +6,11 @@ import {
   Users, 
   Settings,
   LogOut,
-  Store
+  Store,
+  Warehouse,
+  Tag,
+  Building2,
+  FileText
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useAuth } from '@/hooks/useAuth';
@@ -21,7 +25,11 @@ const menuItems = [
   { id: 'pos', label: 'Caixa', icon: ShoppingCart },
   { id: 'dashboard', label: 'Dashboard', icon: LayoutDashboard },
   { id: 'products', label: 'Produtos', icon: Package },
+  { id: 'stock', label: 'Estoque', icon: Warehouse },
+  { id: 'promotions', label: 'Promoções', icon: Tag },
+  { id: 'stores', label: 'Lojas', icon: Building2 },
   { id: 'reports', label: 'Relatórios', icon: BarChart3 },
+  { id: 'audit', label: 'Auditoria', icon: FileText },
   { id: 'users', label: 'Usuários', icon: Users },
   { id: 'settings', label: 'Configurações', icon: Settings },
 ];
@@ -54,22 +62,22 @@ export function Sidebar({ currentPage, onNavigate }: SidebarProps) {
   };
 
   return (
-    <aside className="w-20 lg:w-64 h-screen bg-sidebar border-r border-sidebar-border flex flex-col">
+    <aside className="w-20 lg:w-64 h-screen bg-sidebar flex flex-col">
       {/* Logo */}
-      <div className="p-4 lg:p-5 border-b border-sidebar-border">
+      <div className="p-4 lg:p-5">
         <div className="flex items-center gap-3">
-          <div className="w-10 h-10 rounded-lg bg-primary flex items-center justify-center">
+          <div className="w-11 h-11 rounded-xl bg-gradient-to-br from-primary to-primary/80 flex items-center justify-center shadow-glow">
             <Store className="w-5 h-5 text-primary-foreground" />
           </div>
           <div className="hidden lg:block">
-            <h1 className="font-semibold text-lg text-sidebar-foreground">PDV Express</h1>
-            <p className="text-xs text-muted-foreground">Sistema de Vendas</p>
+            <h1 className="font-bold text-lg text-sidebar-foreground">PDV Express</h1>
+            <p className="text-xs text-sidebar-foreground/50">Sistema de Vendas</p>
           </div>
         </div>
       </div>
 
       {/* Navigation */}
-      <nav className="flex-1 p-3 space-y-1 overflow-y-auto scrollbar-thin">
+      <nav className="flex-1 px-3 py-2 space-y-1 overflow-y-auto scrollbar-thin">
         {menuItems.map((item) => {
           const Icon = item.icon;
           const isActive = currentPage === item.id;
@@ -90,16 +98,16 @@ export function Sidebar({ currentPage, onNavigate }: SidebarProps) {
       </nav>
 
       {/* Theme Toggle */}
-      <div className="px-4 py-2 border-t border-sidebar-border flex justify-center lg:justify-start">
+      <div className="px-4 py-3 border-t border-sidebar-border flex justify-center lg:justify-start items-center gap-3">
         <ThemeToggle />
-        <span className="hidden lg:block ml-3 text-sm text-muted-foreground self-center">Tema</span>
+        <span className="hidden lg:block text-sm text-sidebar-foreground/60">Tema</span>
       </div>
 
       {/* User */}
       <div className="p-4 border-t border-sidebar-border">
-        <div className="flex items-center gap-3 px-2 py-2">
-          <div className="w-9 h-9 rounded-md bg-secondary flex items-center justify-center">
-            <span className="text-sm font-medium text-secondary-foreground">
+        <div className="flex items-center gap-3 px-1">
+          <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-sidebar-accent to-sidebar-accent/80 flex items-center justify-center">
+            <span className="text-sm font-semibold text-sidebar-foreground">
               {profile?.name ? getInitials(profile.name) : '??'}
             </span>
           </div>
@@ -107,11 +115,11 @@ export function Sidebar({ currentPage, onNavigate }: SidebarProps) {
             <p className="font-medium text-sm truncate text-sidebar-foreground">
               {profile?.name || 'Carregando...'}
             </p>
-            <p className="text-xs text-muted-foreground">{getRoleLabel(role)}</p>
+            <p className="text-xs text-sidebar-foreground/50">{getRoleLabel(role)}</p>
           </div>
           <button 
             onClick={handleLogout}
-            className="hidden lg:flex p-2 rounded-md hover:bg-secondary text-muted-foreground hover:text-foreground transition-colors"
+            className="hidden lg:flex p-2.5 rounded-xl hover:bg-sidebar-accent text-sidebar-foreground/60 hover:text-sidebar-foreground transition-all duration-200"
             title="Sair"
           >
             <LogOut className="w-4 h-4" />
