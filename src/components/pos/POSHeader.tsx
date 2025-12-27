@@ -15,6 +15,7 @@ import {
 import { CashRegister } from '@/types/pos';
 import { POSModeToggle } from './POSModeToggle';
 import { POSMode } from '@/hooks/usePOSMode';
+import { StoreSelector } from './StoreSelector';
 
 interface POSHeaderProps {
   register: CashRegister | null;
@@ -62,7 +63,7 @@ export function POSHeader({
 
   return (
     <div className="h-14 bg-card border-b border-border flex items-center justify-between px-4">
-      {/* Left - Navigation and Register status */}
+      {/* Left - Navigation, Store and Register status */}
       <div className="flex items-center gap-4">
         {/* Menu button (when sidebar is hidden) */}
         {isSidebarHidden && onOpenNav && (
@@ -91,6 +92,11 @@ export function POSHeader({
         )}
 
         {(isSidebarHidden || onToggleSidebar) && <div className="h-4 w-px bg-border" />}
+
+        {/* Store Selector */}
+        <StoreSelector />
+        
+        <div className="h-4 w-px bg-border" />
 
         {/* Mode Toggle */}
         <POSModeToggle mode={mode} onToggle={onToggleMode} />
