@@ -15,7 +15,7 @@ export interface CartItemWithPromotion extends CartItem {
 
 export function useCartWithPromotions({ isRegisterOpen, onWeightedProduct }: UseCartOptions) {
   const [cartItems, setCartItems] = useState<CartItemWithPromotion[]>([]);
-  const [selectedItem, setSelectedItem] = useState<CartItemWithPromotion | null>(null);
+  const [selectedItem, setSelectedItemState] = useState<CartItemWithPromotion | null>(null);
   const [customer, setCustomer] = useState<Customer | null>(null);
   const [customerCpf, setCustomerCpf] = useState<string | undefined>();
   const [totalDiscount, setTotalDiscount] = useState(0);
@@ -129,7 +129,7 @@ export function useCartWithPromotions({ isRegisterOpen, onWeightedProduct }: Use
   const updateQuantity = useCallback((itemId: string, quantity: number) => {
     if (quantity <= 0) {
       setCartItems((prev) => prev.filter((item) => item.id !== itemId));
-      if (selectedItem?.id === itemId) setSelectedItem(null);
+      if (selectedItem?.id === itemId) setSelectedItemState(null);
       return;
     }
     setCartItems((prev) => {
@@ -142,18 +142,23 @@ export function useCartWithPromotions({ isRegisterOpen, onWeightedProduct }: Use
 
   const removeItem = useCallback((itemId: string) => {
     setCartItems((prev) => prev.filter((item) => item.id !== itemId));
-    if (selectedItem?.id === itemId) setSelectedItem(null);
+    if (selectedItem?.id === itemId) setSelectedItemState(null);
   }, [selectedItem?.id]);
 
   const clearCart = useCallback(() => {
     setCartItems([]);
-    setSelectedItem(null);
+    setSelectedItemState(null);
     setCustomer(null);
     setCustomerCpf(undefined);
     setTotalDiscount(0);
     setTotalDiscountType('percent');
     setLoyaltyDiscount(0);
     setLoyaltyPointsUsed(0);
+  }, []);
+
+  // Wrapper that accepts CartItem | CartItemWithPromotion | null
+  const setSelectedItem = useCallback((item: CartItemWithPromotion | null) => {
+    setSelectedItemState(item);
   }, []);
 
   const applyItemDiscount = useCallback((itemId: string, discount: number, type: 'percent' | 'value') => {
@@ -164,7 +169,7 @@ export function useCartWithPromotions({ isRegisterOpen, onWeightedProduct }: Use
       });
       return recalculatePromotions(newItems);
     });
-    setSelectedItem(null);
+    setSelectedItemState(null);
   }, [recalculatePromotions]);
 
   const setDiscount = useCallback((discount: number, type: 'percent' | 'value') => {

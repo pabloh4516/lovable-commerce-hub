@@ -1,11 +1,11 @@
-import { CartItem } from '@/types/pos';
+import { CartItemWithPromotion } from '@/hooks/useCartWithPromotions';
 import { Trash2, Scale } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 
 interface SaleItemsTableProps {
-  items: CartItem[];
+  items: CartItemWithPromotion[];
   selectedItemId: string | null;
-  onSelectItem: (item: CartItem) => void;
+  onSelectItem: (item: CartItemWithPromotion | null) => void;
   onRemoveItem: (itemId: string) => void;
 }
 

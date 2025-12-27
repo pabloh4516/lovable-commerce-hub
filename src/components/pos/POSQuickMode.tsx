@@ -4,7 +4,8 @@ import { QuickModeItemList } from './QuickModeItemList';
 import { QuickModeTotals } from './QuickModeTotals';
 import { QuickModeShortcuts } from './QuickModeShortcuts';
 import { useKeyboardShortcuts } from '@/hooks/useKeyboardShortcuts';
-import { Product, CartItem, Customer, PaymentMethod } from '@/types/pos';
+import { Product, Customer } from '@/types/pos';
+import { CartItemWithPromotion } from '@/hooks/useCartWithPromotions';
 import { User } from 'lucide-react';
 
 interface POSQuickModeProps {
@@ -12,9 +13,9 @@ interface POSQuickModeProps {
   products: Product[];
   
   // Cart
-  cartItems: CartItem[];
-  selectedItem: CartItem | null;
-  setSelectedItem: (item: CartItem | null) => void;
+  cartItems: CartItemWithPromotion[];
+  selectedItem: CartItemWithPromotion | null;
+  setSelectedItem: (item: CartItemWithPromotion | null) => void;
   addToCart: (product: Product) => void;
   removeItem: (itemId: string) => void;
   clearCart: () => void;

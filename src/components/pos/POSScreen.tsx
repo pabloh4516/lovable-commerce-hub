@@ -307,6 +307,17 @@ export function POSScreen({ currentPage = 'pos', onNavigate }: POSScreenProps) {
         onClose={modals.closeReceiptModal}
         saleData={modals.lastSaleData}
       />
+
+      <LoyaltyRedeemModal
+        isOpen={isLoyaltyModalOpen}
+        onClose={() => setIsLoyaltyModalOpen(false)}
+        customerPoints={customerPoints || null}
+        maxDiscount={cart.total}
+        onRedeem={(points, discount) => {
+          cart.applyLoyaltyDiscount(points, discount);
+          setIsLoyaltyModalOpen(false);
+        }}
+      />
     </>
   );
 
@@ -467,22 +478,30 @@ export function POSScreen({ currentPage = 'pos', onNavigate }: POSScreenProps) {
         </>
       }
       rightPanel={
-        <CartPanel
+        <CartPanelWithPromotions
           items={cart.cartItems}
           selectedItemId={cart.selectedItem?.id || null}
           customer={cart.customer}
           customerCpf={cart.customerCpf}
           subtotal={cart.subtotal}
+          subtotalWithPromotions={cart.subtotalWithPromotions}
+          promotionsDiscount={cart.promotionsDiscount}
           discountValue={cart.discountValue}
+          loyaltyDiscount={cart.loyaltyDiscount}
+          loyaltyPointsUsed={cart.loyaltyPointsUsed}
           total={cart.total}
           totalDiscount={cart.totalDiscount}
           totalDiscountType={cart.totalDiscountType}
           isRegisterOpen={isOpen}
+          customerPoints={customerPoints || null}
+          earnablePoints={earnablePoints}
           onSelectItem={cart.setSelectedItem}
           onUpdateQuantity={cart.updateQuantity}
           onRemoveItem={cart.removeItem}
           onOpenCustomer={() => modals.openModal('customer')}
           onOpenDiscount={() => modals.openModal('discount')}
+          onOpenLoyaltyRedeem={() => setIsLoyaltyModalOpen(true)}
+          onRemoveLoyaltyDiscount={() => cart.applyLoyaltyDiscount(0, 0)}
           onCheckout={handleCheckout}
         />
       }
