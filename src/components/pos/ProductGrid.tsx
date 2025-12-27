@@ -1,3 +1,4 @@
+import { forwardRef } from 'react';
 import { Product } from '@/types/pos';
 import { Scale, AlertTriangle } from 'lucide-react';
 
@@ -6,9 +7,10 @@ interface ProductGridProps {
   onSelectProduct: (product: Product) => void;
 }
 
-export function ProductGrid({ products, onSelectProduct }: ProductGridProps) {
-  return (
-    <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-3">
+export const ProductGrid = forwardRef<HTMLDivElement, ProductGridProps>(
+  function ProductGrid({ products, onSelectProduct }, ref) {
+    return (
+      <div ref={ref} className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-3">
       {products.map((product) => {
         const isLowStock = product.stock <= product.minStock;
         
@@ -53,4 +55,6 @@ export function ProductGrid({ products, onSelectProduct }: ProductGridProps) {
       })}
     </div>
   );
-}
+});
+
+ProductGrid.displayName = 'ProductGrid';
