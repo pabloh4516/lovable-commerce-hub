@@ -1,4 +1,5 @@
 import { Product } from '@/types/pos';
+import { Scale, AlertTriangle } from 'lucide-react';
 
 interface ProductGridProps {
   products: Product[];
@@ -7,49 +8,49 @@ interface ProductGridProps {
 
 export function ProductGrid({ products, onSelectProduct }: ProductGridProps) {
   return (
-    <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4">
-      {products.map((product, index) => (
-        <button
-          key={product.id}
-          onClick={() => onSelectProduct(product)}
-          className="product-card group animate-in"
-          style={{ animationDelay: `${index * 30}ms` }}
-        >
-          <div className="aspect-square bg-gradient-to-br from-secondary/80 to-secondary/40 rounded-xl mb-3 flex items-center justify-center text-4xl relative overflow-hidden group-hover:scale-105 transition-transform duration-300">
-            <span className="relative z-10">{getCategoryEmoji(product.category)}</span>
-            <div className="absolute inset-0 bg-gradient-to-t from-primary/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
-          </div>
-          <h3 className="font-medium text-sm line-clamp-2 mb-2 group-hover:text-primary transition-colors duration-200">
-            {product.name}
-          </h3>
-          <div className="flex items-center justify-between mt-auto">
-            <span className="text-lg font-bold gradient-text font-mono">
-              R$ {product.price.toFixed(2).replace('.', ',')}
-            </span>
-            <span className="text-[10px] text-muted-foreground px-2 py-1 rounded-lg bg-secondary/50">
-              {product.stock} {product.unit}
-            </span>
-          </div>
-        </button>
-      ))}
+    <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-3">
+      {products.map((product) => {
+        const isLowStock = product.stock <= product.minStock;
+        
+        return (
+          <button
+            key={product.id}
+            onClick={() => onSelectProduct(product)}
+            className="product-card group text-left"
+          >
+            {/* Product Code */}
+            <div className="flex items-center justify-between mb-2">
+              <span className="text-xs font-mono text-muted-foreground">{product.code}</span>
+              {product.isWeighted && (
+                <span className="flex items-center gap-1 text-[10px] text-muted-foreground bg-muted px-1.5 py-0.5 rounded">
+                  <Scale className="w-3 h-3" />
+                  kg
+                </span>
+              )}
+            </div>
+            
+            {/* Product Name */}
+            <h3 className="font-medium text-sm line-clamp-2 mb-3 min-h-[2.5rem]">
+              {product.name}
+            </h3>
+            
+            {/* Price and Stock */}
+            <div className="flex items-end justify-between mt-auto">
+              <span className="text-lg font-bold tabular-nums">
+                R$ {product.price.toFixed(2).replace('.', ',')}
+              </span>
+              <span className={`text-[10px] px-2 py-1 rounded ${
+                isLowStock 
+                  ? 'bg-warning/10 text-warning flex items-center gap-1' 
+                  : 'bg-muted text-muted-foreground'
+              }`}>
+                {isLowStock && <AlertTriangle className="w-3 h-3" />}
+                {product.stock} {product.unit}
+              </span>
+            </div>
+          </button>
+        );
+      })}
     </div>
   );
-}
-
-function getCategoryEmoji(category: string): string {
-  const emojis: Record<string, string> = {
-    Bebidas: '🥤',
-    Alimentos: '🍔',
-    Limpeza: '🧹',
-    Higiene: '🧴',
-    Doces: '🍫',
-    Laticínios: '🥛',
-    Padaria: '🥖',
-    Frios: '🧀',
-    Hortifruti: '🥬',
-    Carnes: '🥩',
-    Mercearia: '🛒',
-    Outros: '📦',
-  };
-  return emojis[category] || '📦';
 }
