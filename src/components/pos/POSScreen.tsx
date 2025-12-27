@@ -1,4 +1,4 @@
-import { useState, useMemo, useCallback, useEffect } from 'react';
+import { useState, useMemo, useCallback } from 'react';
 import { ProductSearch } from './ProductSearch';
 import { QuickCategories } from './QuickCategories';
 import { ProductGrid } from './ProductGrid';
@@ -18,6 +18,7 @@ import { QuantityModal } from './QuantityModal';
 import { DiscountModal } from './DiscountModal';
 import { PriceCheckModal } from './PriceCheckModal';
 import { ShortcutsModal } from './ShortcutsModal';
+import { ReceiptModal } from './ReceiptModal';
 import { useProducts, useCategories, DbProduct, DbCategory } from '@/hooks/useProducts';
 import { useOpenRegister, useCashRegisterMutations, DbCashRegister } from '@/hooks/useCashRegisterDb';
 import { useSaleMutations } from '@/hooks/useSales';
@@ -77,6 +78,24 @@ export function POSScreen() {
   // Modal states
   const [activeModal, setActiveModal] = useState<POSModalType | null>(null);
   const [movementType, setMovementType] = useState<'withdrawal' | 'deposit'>('withdrawal');
+  const [showReceipt, setShowReceipt] = useState(false);
+  const [lastSaleData, setLastSaleData] = useState<{
+    saleNumber: number;
+    items: CartItem[];
+    payments: { method: PaymentMethod; amount: number }[];
+    subtotal: number;
+    discount: number;
+    discountType: 'percent' | 'value';
+    total: number;
+    customer?: Customer | null;
+    customerCpf?: string;
+    operatorName: string;
+    storeName: string;
+    storeAddress?: string;
+    storeCnpj?: string;
+    storePhone?: string;
+    createdAt: Date;
+  } | null>(null);
 
   // Check if register is open
   const isOpen = !!openRegister && openRegister.status === 'open';
@@ -198,6 +217,22 @@ export function POSScreen() {
     const discountValue = totalDiscountType === 'percent' ? (subtotal * totalDiscount / 100) : totalDiscount;
     const total = subtotal - discountValue;
 
+    // Save sale data for receipt before clearing
+    const saleDataForReceipt = {
+      saleNumber,
+      items: [...cartItems],
+      payments,
+      subtotal,
+      discount: totalDiscount,
+      discountType: totalDiscountType,
+      total,
+      customer,
+      customerCpf,
+      operatorName: profile?.name || 'Operador',
+      storeName: 'PDV Express',
+      createdAt: new Date(),
+    };
+
     createSale.mutate({
       registerId: openRegister.id,
       customerId: customer?.id,
@@ -211,12 +246,14 @@ export function POSScreen() {
     }, {
       onSuccess: () => {
         closeModal();
+        setLastSaleData(saleDataForReceipt);
+        setShowReceipt(true);
         clearCart();
         setSaleNumber((prev) => prev + 1);
         toast.success('Venda realizada com sucesso!', { duration: 3000 });
       },
     });
-  }, [cartItems, totalDiscount, totalDiscountType, customer, openRegister, createSale, closeModal, clearCart]);
+  }, [cartItems, totalDiscount, totalDiscountType, customer, customerCpf, openRegister, createSale, closeModal, clearCart, saleNumber, profile]);
 
   const handleOpenRegister = useCallback((amount: number) => {
     openRegisterMutation.mutate({ openingBalance: amount, registerNumber: 1 }, {
@@ -556,6 +593,12 @@ export function POSScreen() {
         total={total}
         customer={customer}
         onConfirm={handlePaymentConfirm}
+      />
+
+      <ReceiptModal
+        isOpen={showReceipt}
+        onClose={() => setShowReceipt(false)}
+        saleData={lastSaleData}
       />
     </div>
   );
