@@ -100,7 +100,7 @@ export function QuantityModal({ isOpen, onClose, onConfirm, item }: QuantityModa
           </div>
 
           <Button
-            variant="gradient"
+            variant="default"
             size="xl"
             className="w-full"
             onClick={handleConfirm}

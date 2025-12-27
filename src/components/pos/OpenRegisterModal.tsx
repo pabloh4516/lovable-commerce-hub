@@ -88,7 +88,7 @@ export function OpenRegisterModal({ isOpen, onClose, onConfirm }: OpenRegisterMo
           </div>
 
           <Button
-            variant="gradientSuccess"
+            variant="success"
             size="xl"
             className="w-full"
             onClick={handleConfirm}
