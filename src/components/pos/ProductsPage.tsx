@@ -27,7 +27,7 @@ export function ProductsPage() {
             {products.length} produtos cadastrados
           </p>
         </div>
-        <Button variant="gradient">
+        <Button variant="default">
           <Plus className="w-4 h-4 mr-2" />
           Novo Produto
         </Button>

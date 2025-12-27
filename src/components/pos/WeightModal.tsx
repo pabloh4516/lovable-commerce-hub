@@ -119,7 +119,7 @@ export function WeightModal({ isOpen, onClose, onConfirm, product }: WeightModal
           </div>
 
           <Button
-            variant="gradient"
+            variant="default"
             size="xl"
             className="w-full"
             onClick={handleConfirm}

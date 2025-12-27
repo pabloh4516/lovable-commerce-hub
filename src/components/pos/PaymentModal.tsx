@@ -240,7 +240,7 @@ export function PaymentModal({ isOpen, onClose, total, customer, onConfirm }: Pa
 
             <div className="p-6 pt-0">
               <Button
-                variant="gradientSuccess"
+                variant="success"
                 size="xl"
                 className="w-full"
                 onClick={handleConfirm}
