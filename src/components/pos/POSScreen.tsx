@@ -6,7 +6,7 @@ import { SaleItemsTable } from './SaleItemsTable';
 import { LastItemAdded } from './LastItemAdded';
 import { TotalsPanel } from './TotalsPanel';
 import { ShortcutsBar } from './ShortcutsBar';
-import { CartPanel } from './CartPanel';
+import { CartPanelWithPromotions } from './CartPanelWithPromotions';
 import { POSLayout } from './POSLayout';
 import { POSQuickMode } from './POSQuickMode';
 import { PaymentModal } from './PaymentModal';
@@ -21,17 +21,19 @@ import { DiscountModal } from './DiscountModal';
 import { PriceCheckModal } from './PriceCheckModal';
 import { ShortcutsModal } from './ShortcutsModal';
 import { ReceiptModal } from './ReceiptModal';
+import { LoyaltyRedeemModal } from './LoyaltyRedeemModal';
 import { FloatingNav } from './FloatingNav';
 import { useOpenRegister, useCashRegisterMutations } from '@/hooks/useCashRegisterDb';
 import { useAuth } from '@/hooks/useAuth';
 import { useStoreSettings } from '@/hooks/useStoreSettings';
 import { useKeyboardShortcuts } from '@/hooks/useKeyboardShortcuts';
-import { useCart } from '@/hooks/useCart';
+import { useCartWithPromotions } from '@/hooks/useCartWithPromotions';
 import { usePOSModals } from '@/hooks/usePOSModals';
 import { useCheckout } from '@/hooks/useCheckout';
 import { usePOSProducts } from '@/hooks/usePOSProducts';
 import { usePOSMode } from '@/hooks/usePOSMode';
 import { useFullscreen } from '@/hooks/useFullscreen';
+import { useCustomerPoints, usePointsCalculator, useLoyaltyMutations } from '@/hooks/useLoyalty';
 import { PaymentMethod } from '@/types/pos';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { LayoutGrid, List, ShoppingCart } from 'lucide-react';
@@ -51,6 +53,7 @@ export function POSScreen({ currentPage = 'pos', onNavigate }: POSScreenProps) {
   const [viewMode, setViewMode] = useState<'items' | 'products'>('items');
   const [saleNumber, setSaleNumber] = useState(1);
   const [isNavOpen, setIsNavOpen] = useState(false);
+  const [isLoyaltyModalOpen, setIsLoyaltyModalOpen] = useState(false);
 
   const isOpen = !!openRegister && openRegister.status === 'open';
 
@@ -60,16 +63,21 @@ export function POSScreen({ currentPage = 'pos', onNavigate }: POSScreenProps) {
   // Fullscreen
   const fullscreen = useFullscreen();
 
-
   // Custom Hooks
   const { products, categories, filteredProducts, quickProducts, isLoading: loadingProducts } = usePOSProducts(selectedCategory);
   
   const modals = usePOSModals();
   
-  const cart = useCart({
+  const cart = useCartWithPromotions({
     isRegisterOpen: isOpen,
     onWeightedProduct: modals.openWeightModal,
   });
+
+  // Loyalty
+  const { data: customerPoints } = useCustomerPoints(cart.customer?.id);
+  const { calculateEarnablePoints, activeProgram } = usePointsCalculator();
+  const { earnPoints } = useLoyaltyMutations();
+  const earnablePoints = calculateEarnablePoints(cart.total);
 
   const checkout = useCheckout({
     onSuccess: () => {
