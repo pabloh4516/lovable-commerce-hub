@@ -5,7 +5,12 @@ import {
   ArrowUpCircle,
   Lock,
   Keyboard,
-  Search
+  Search,
+  Menu,
+  Maximize,
+  Minimize,
+  PanelLeftClose,
+  PanelLeft
 } from 'lucide-react';
 import { CashRegister } from '@/types/pos';
 import { POSModeToggle } from './POSModeToggle';
@@ -22,6 +27,12 @@ interface POSHeaderProps {
   onDeposit: () => void;
   onPriceCheck: () => void;
   onShowShortcuts: () => void;
+  // Fullscreen props
+  isSidebarHidden?: boolean;
+  isNativeFullscreen?: boolean;
+  onToggleSidebar?: () => void;
+  onToggleFullscreen?: () => void;
+  onOpenNav?: () => void;
 }
 
 export function POSHeader({
@@ -35,6 +46,11 @@ export function POSHeader({
   onDeposit,
   onPriceCheck,
   onShowShortcuts,
+  isSidebarHidden = false,
+  isNativeFullscreen = false,
+  onToggleSidebar,
+  onToggleFullscreen,
+  onOpenNav,
 }: POSHeaderProps) {
   const isOpen = register?.status === 'open';
 
@@ -46,8 +62,36 @@ export function POSHeader({
 
   return (
     <div className="h-14 bg-card border-b border-border flex items-center justify-between px-4">
-      {/* Left - Register status */}
+      {/* Left - Navigation and Register status */}
       <div className="flex items-center gap-4">
+        {/* Menu button (when sidebar is hidden) */}
+        {isSidebarHidden && onOpenNav && (
+          <button
+            onClick={onOpenNav}
+            className="flex items-center justify-center w-9 h-9 rounded-lg hover:bg-secondary transition-colors"
+            title="Menu"
+          >
+            <Menu className="h-5 w-5" />
+          </button>
+        )}
+
+        {/* Sidebar toggle */}
+        {onToggleSidebar && (
+          <button
+            onClick={onToggleSidebar}
+            className="flex items-center justify-center w-9 h-9 rounded-lg hover:bg-secondary transition-colors"
+            title={isSidebarHidden ? 'Mostrar sidebar (Ctrl+B)' : 'Ocultar sidebar (Ctrl+B)'}
+          >
+            {isSidebarHidden ? (
+              <PanelLeft className="h-5 w-5" />
+            ) : (
+              <PanelLeftClose className="h-5 w-5" />
+            )}
+          </button>
+        )}
+
+        {(isSidebarHidden || onToggleSidebar) && <div className="h-4 w-px bg-border" />}
+
         {/* Mode Toggle */}
         <POSModeToggle mode={mode} onToggle={onToggleMode} />
         
@@ -125,6 +169,24 @@ export function POSHeader({
           <Keyboard className="h-4 w-4" />
           <span className="hidden md:inline">Atalhos (F1)</span>
         </button>
+
+        {/* Fullscreen toggle */}
+        {onToggleFullscreen && (
+          <>
+            <div className="h-4 w-px bg-border" />
+            <button
+              onClick={onToggleFullscreen}
+              className="flex items-center justify-center w-9 h-9 rounded-lg hover:bg-secondary transition-colors"
+              title={isNativeFullscreen ? 'Sair da tela cheia (F11)' : 'Tela cheia (F11)'}
+            >
+              {isNativeFullscreen ? (
+                <Minimize className="h-4 w-4" />
+              ) : (
+                <Maximize className="h-4 w-4" />
+              )}
+            </button>
+          </>
+        )}
 
         <div className="h-4 w-px bg-border" />
 

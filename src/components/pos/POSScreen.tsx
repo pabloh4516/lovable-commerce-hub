@@ -21,6 +21,7 @@ import { DiscountModal } from './DiscountModal';
 import { PriceCheckModal } from './PriceCheckModal';
 import { ShortcutsModal } from './ShortcutsModal';
 import { ReceiptModal } from './ReceiptModal';
+import { FloatingNav } from './FloatingNav';
 import { useOpenRegister, useCashRegisterMutations } from '@/hooks/useCashRegisterDb';
 import { useAuth } from '@/hooks/useAuth';
 import { useStoreSettings } from '@/hooks/useStoreSettings';
@@ -30,11 +31,17 @@ import { usePOSModals } from '@/hooks/usePOSModals';
 import { useCheckout } from '@/hooks/useCheckout';
 import { usePOSProducts } from '@/hooks/usePOSProducts';
 import { usePOSMode } from '@/hooks/usePOSMode';
+import { useFullscreen } from '@/hooks/useFullscreen';
 import { PaymentMethod } from '@/types/pos';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { LayoutGrid, List, ShoppingCart } from 'lucide-react';
 
-export function POSScreen() {
+interface POSScreenProps {
+  currentPage?: string;
+  onNavigate?: (page: string) => void;
+}
+
+export function POSScreen({ currentPage = 'pos', onNavigate }: POSScreenProps) {
   const { profile } = useAuth();
   const { data: openRegister, isLoading: loadingRegister } = useOpenRegister();
   const { data: storeSettings } = useStoreSettings();
@@ -43,11 +50,16 @@ export function POSScreen() {
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
   const [viewMode, setViewMode] = useState<'items' | 'products'>('items');
   const [saleNumber, setSaleNumber] = useState(1);
+  const [isNavOpen, setIsNavOpen] = useState(false);
 
   const isOpen = !!openRegister && openRegister.status === 'open';
 
   // POS Mode
-  const { mode, toggleMode } = usePOSMode();
+  const { mode, toggleMode, isQuickMode } = usePOSMode();
+  
+  // Fullscreen
+  const fullscreen = useFullscreen();
+
 
   // Custom Hooks
   const { products, categories, filteredProducts, quickProducts, isLoading: loadingProducts } = usePOSProducts(selectedCategory);
@@ -68,17 +80,25 @@ export function POSScreen() {
     onShowReceipt: modals.showReceiptModal,
   });
 
-  // Ctrl+M to toggle mode
+  // Keyboard shortcuts: Ctrl+M to toggle mode, Ctrl+B to toggle sidebar, F11 for fullscreen
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
       if (e.ctrlKey && e.key === 'm') {
         e.preventDefault();
         toggleMode();
       }
+      if (e.ctrlKey && e.key === 'b') {
+        e.preventDefault();
+        fullscreen.toggleSidebar();
+      }
+      if (e.key === 'F11') {
+        e.preventDefault();
+        fullscreen.toggleNativeFullscreen();
+      }
     };
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [toggleMode]);
+  }, [toggleMode, fullscreen]);
 
   // Handlers
   const handlePaymentConfirm = useCallback((payments: { method: PaymentMethod; amount: number }[]) => {
@@ -295,13 +315,29 @@ export function POSScreen() {
       onDeposit={modals.openDeposit}
       onPriceCheck={() => modals.openModal('priceCheck')}
       onShowShortcuts={() => modals.openModal('shortcuts')}
+      isSidebarHidden={fullscreen.isSidebarHidden}
+      isNativeFullscreen={fullscreen.isNativeFullscreen}
+      onToggleSidebar={fullscreen.toggleSidebar}
+      onToggleFullscreen={fullscreen.toggleNativeFullscreen}
+      onOpenNav={() => setIsNavOpen(true)}
     />
   );
+
+  // Floating Navigation (when sidebar is hidden)
+  const floatingNav = onNavigate ? (
+    <FloatingNav
+      isOpen={isNavOpen}
+      onClose={() => setIsNavOpen(false)}
+      currentPage={currentPage}
+      onNavigate={onNavigate}
+    />
+  ) : null;
 
   // Quick Mode
   if (mode === 'quick') {
     return (
       <div className="h-screen flex flex-col overflow-hidden bg-background">
+        {floatingNav}
         {header}
         <POSQuickMode
           products={products}
@@ -331,15 +367,17 @@ export function POSScreen() {
 
   // Detailed Mode
   return (
-    <POSLayout
-      isLoading={loadingProducts || loadingRegister}
-      header={header}
-      leftPanel={
-        <>
-          {/* Search Bar */}
-          <div className="p-4 pb-2 border-b border-border">
-            <ProductSearch products={products} onSelectProduct={cart.addToCart} />
-          </div>
+    <>
+      {floatingNav}
+      <POSLayout
+        isLoading={loadingProducts || loadingRegister}
+        header={header}
+        leftPanel={
+          <>
+            {/* Search Bar */}
+            <div className="p-4 pb-2 border-b border-border">
+              <ProductSearch products={products} onSelectProduct={cart.addToCart} />
+            </div>
 
           {/* View Tabs */}
           <Tabs value={viewMode} onValueChange={(v) => setViewMode(v as 'items' | 'products')} className="flex-1 flex flex-col overflow-hidden">
@@ -460,5 +498,6 @@ export function POSScreen() {
       }
       modals={modalsContent}
     />
+    </>
   );
 }
