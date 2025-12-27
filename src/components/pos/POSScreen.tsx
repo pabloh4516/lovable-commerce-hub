@@ -1,4 +1,4 @@
-import { useState, useCallback, useMemo } from 'react';
+import { useState, useCallback, useMemo, useEffect } from 'react';
 import { ProductSearch } from './ProductSearch';
 import { QuickCategories } from './QuickCategories';
 import { ProductGrid } from './ProductGrid';
@@ -8,6 +8,7 @@ import { TotalsPanel } from './TotalsPanel';
 import { ShortcutsBar } from './ShortcutsBar';
 import { CartPanel } from './CartPanel';
 import { POSLayout } from './POSLayout';
+import { POSQuickMode } from './POSQuickMode';
 import { PaymentModal } from './PaymentModal';
 import { POSHeader } from './POSHeader';
 import { OpenRegisterModal } from './OpenRegisterModal';
@@ -28,6 +29,7 @@ import { useCart } from '@/hooks/useCart';
 import { usePOSModals } from '@/hooks/usePOSModals';
 import { useCheckout } from '@/hooks/useCheckout';
 import { usePOSProducts } from '@/hooks/usePOSProducts';
+import { usePOSMode } from '@/hooks/usePOSMode';
 import { PaymentMethod } from '@/types/pos';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { LayoutGrid, List, ShoppingCart } from 'lucide-react';
@@ -43,6 +45,9 @@ export function POSScreen() {
   const [saleNumber, setSaleNumber] = useState(1);
 
   const isOpen = !!openRegister && openRegister.status === 'open';
+
+  // POS Mode
+  const { mode, toggleMode } = usePOSMode();
 
   // Custom Hooks
   const { products, categories, filteredProducts, quickProducts, isLoading: loadingProducts } = usePOSProducts(selectedCategory);
@@ -62,6 +67,18 @@ export function POSScreen() {
     },
     onShowReceipt: modals.showReceiptModal,
   });
+
+  // Ctrl+M to toggle mode
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.ctrlKey && e.key === 'm') {
+        e.preventDefault();
+        toggleMode();
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [toggleMode]);
 
   // Handlers
   const handlePaymentConfirm = useCallback((payments: { method: PaymentMethod; amount: number }[]) => {
@@ -143,7 +160,7 @@ export function POSScreen() {
     modals.openModal('payment');
   }, [cart.cartItems.length, modals]);
 
-  // Keyboard shortcuts
+  // Keyboard shortcuts - only for detailed mode (quick mode has its own)
   useKeyboardShortcuts({
     onF1: () => modals.openModal('shortcuts'),
     onF2: () => modals.openModal('priceCheck'),
@@ -158,7 +175,7 @@ export function POSScreen() {
     onF11: () => isOpen && modals.openDeposit(),
     onF12: handleCheckout,
     onEscape: modals.closeModal,
-  }, true);
+  }, mode === 'detailed');
 
   // Register data for header
   const registerForHeader = useMemo(() => openRegister ? {
@@ -184,21 +201,139 @@ export function POSScreen() {
     totalFiado: Number(openRegister.total_fiado),
   } : null, [openRegister, profile?.name]);
 
+  // Modals (shared between both modes)
+  const modalsContent = (
+    <>
+      <OpenRegisterModal
+        isOpen={modals.activeModal === 'openRegister'}
+        onClose={modals.closeModal}
+        onConfirm={handleOpenRegister}
+      />
+
+      {registerForHeader && (
+        <CloseRegisterModal
+          isOpen={modals.activeModal === 'closeRegister'}
+          onClose={modals.closeModal}
+          onConfirm={handleCloseRegister}
+          register={registerForHeader}
+        />
+      )}
+
+      <CashMovementModal
+        isOpen={modals.activeModal === 'withdrawal' || modals.activeModal === 'deposit'}
+        onClose={modals.closeModal}
+        onConfirm={handleCashMovement}
+        type={modals.movementType}
+      />
+
+      <CustomerModal
+        isOpen={modals.activeModal === 'customer'}
+        onClose={modals.closeModal}
+        onSelect={handleSelectCustomer}
+        currentCustomer={cart.customer}
+      />
+
+      <WeightModal
+        isOpen={modals.activeModal === 'weight'}
+        onClose={modals.closeModal}
+        onConfirm={handleWeightConfirm}
+        product={modals.pendingProduct}
+      />
+
+      <QuantityModal
+        isOpen={modals.activeModal === 'quantity'}
+        onClose={modals.closeModal}
+        onConfirm={handleQuantityChange}
+        item={cart.selectedItem}
+      />
+
+      <DiscountModal
+        isOpen={modals.activeModal === 'discount'}
+        onClose={modals.closeModal}
+        onConfirm={cart.selectedItem ? handleItemDiscount : handleTotalDiscount}
+        item={cart.selectedItem}
+        currentTotal={cart.subtotal}
+        isItemDiscount={!!cart.selectedItem}
+      />
+
+      <PriceCheckModal
+        isOpen={modals.activeModal === 'priceCheck'}
+        onClose={modals.closeModal}
+      />
+
+      <ShortcutsModal
+        isOpen={modals.activeModal === 'shortcuts'}
+        onClose={modals.closeModal}
+      />
+
+      <PaymentModal
+        isOpen={modals.activeModal === 'payment'}
+        onClose={modals.closeModal}
+        total={cart.total}
+        customer={cart.customer}
+        onConfirm={handlePaymentConfirm}
+      />
+
+      <ReceiptModal
+        isOpen={modals.showReceipt}
+        onClose={modals.closeReceiptModal}
+        saleData={modals.lastSaleData}
+      />
+    </>
+  );
+
+  // Header (shared)
+  const header = (
+    <POSHeader
+      register={registerForHeader}
+      saleNumber={saleNumber}
+      mode={mode}
+      onToggleMode={toggleMode}
+      onOpenRegister={() => modals.openModal('openRegister')}
+      onCloseRegister={() => modals.openModal('closeRegister')}
+      onWithdrawal={modals.openWithdrawal}
+      onDeposit={modals.openDeposit}
+      onPriceCheck={() => modals.openModal('priceCheck')}
+      onShowShortcuts={() => modals.openModal('shortcuts')}
+    />
+  );
+
+  // Quick Mode
+  if (mode === 'quick') {
+    return (
+      <div className="h-screen flex flex-col overflow-hidden bg-background">
+        {header}
+        <POSQuickMode
+          products={products}
+          cartItems={cart.cartItems}
+          selectedItem={cart.selectedItem}
+          setSelectedItem={cart.setSelectedItem}
+          addToCart={cart.addToCart}
+          removeItem={cart.removeItem}
+          clearCart={cart.clearCart}
+          customer={cart.customer}
+          customerCpf={cart.customerCpf}
+          subtotal={cart.subtotal}
+          discountValue={cart.discountValue}
+          total={cart.total}
+          isRegisterOpen={isOpen}
+          openCustomerModal={() => modals.openModal('customer')}
+          openPaymentModal={() => modals.openModal('payment')}
+          openShortcutsModal={() => modals.openModal('shortcuts')}
+          openPriceCheckModal={() => modals.openModal('priceCheck')}
+          openDiscountModal={() => modals.openModal('discount')}
+          openQuantityModal={() => modals.openModal('quantity')}
+        />
+        {modalsContent}
+      </div>
+    );
+  }
+
+  // Detailed Mode
   return (
     <POSLayout
       isLoading={loadingProducts || loadingRegister}
-      header={
-        <POSHeader
-          register={registerForHeader}
-          saleNumber={saleNumber}
-          onOpenRegister={() => modals.openModal('openRegister')}
-          onCloseRegister={() => modals.openModal('closeRegister')}
-          onWithdrawal={modals.openWithdrawal}
-          onDeposit={modals.openDeposit}
-          onPriceCheck={() => modals.openModal('priceCheck')}
-          onShowShortcuts={() => modals.openModal('shortcuts')}
-        />
-      }
+      header={header}
       leftPanel={
         <>
           {/* Search Bar */}
@@ -323,85 +458,7 @@ export function POSScreen() {
           </button>
         ) : null
       }
-      modals={
-        <>
-          <OpenRegisterModal
-            isOpen={modals.activeModal === 'openRegister'}
-            onClose={modals.closeModal}
-            onConfirm={handleOpenRegister}
-          />
-
-          {registerForHeader && (
-            <CloseRegisterModal
-              isOpen={modals.activeModal === 'closeRegister'}
-              onClose={modals.closeModal}
-              onConfirm={handleCloseRegister}
-              register={registerForHeader}
-            />
-          )}
-
-          <CashMovementModal
-            isOpen={modals.activeModal === 'withdrawal' || modals.activeModal === 'deposit'}
-            onClose={modals.closeModal}
-            onConfirm={handleCashMovement}
-            type={modals.movementType}
-          />
-
-          <CustomerModal
-            isOpen={modals.activeModal === 'customer'}
-            onClose={modals.closeModal}
-            onSelect={handleSelectCustomer}
-            currentCustomer={cart.customer}
-          />
-
-          <WeightModal
-            isOpen={modals.activeModal === 'weight'}
-            onClose={modals.closeModal}
-            onConfirm={handleWeightConfirm}
-            product={modals.pendingProduct}
-          />
-
-          <QuantityModal
-            isOpen={modals.activeModal === 'quantity'}
-            onClose={modals.closeModal}
-            onConfirm={handleQuantityChange}
-            item={cart.selectedItem}
-          />
-
-          <DiscountModal
-            isOpen={modals.activeModal === 'discount'}
-            onClose={modals.closeModal}
-            onConfirm={cart.selectedItem ? handleItemDiscount : handleTotalDiscount}
-            item={cart.selectedItem}
-            currentTotal={cart.subtotal}
-            isItemDiscount={!!cart.selectedItem}
-          />
-
-          <PriceCheckModal
-            isOpen={modals.activeModal === 'priceCheck'}
-            onClose={modals.closeModal}
-          />
-
-          <ShortcutsModal
-            isOpen={modals.activeModal === 'shortcuts'}
-            onClose={modals.closeModal}
-          />
-
-          <PaymentModal
-            isOpen={modals.activeModal === 'payment'}
-            onClose={modals.closeModal}
-            total={cart.total}
-            customer={cart.customer}
-            onConfirm={handlePaymentConfirm}
-          />
-
-          <ReceiptModal
-            isOpen={modals.showReceipt}
-            onClose={modals.closeReceiptModal}
-            saleData={modals.lastSaleData}
-          />
-        </>
-      }
+      modals={modalsContent}
     />
   );
 }

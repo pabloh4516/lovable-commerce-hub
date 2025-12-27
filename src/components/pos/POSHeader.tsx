@@ -8,10 +8,14 @@ import {
   Search
 } from 'lucide-react';
 import { CashRegister } from '@/types/pos';
+import { POSModeToggle } from './POSModeToggle';
+import { POSMode } from '@/hooks/usePOSMode';
 
 interface POSHeaderProps {
   register: CashRegister | null;
   saleNumber: number;
+  mode: POSMode;
+  onToggleMode: () => void;
   onOpenRegister: () => void;
   onCloseRegister: () => void;
   onWithdrawal: () => void;
@@ -23,6 +27,8 @@ interface POSHeaderProps {
 export function POSHeader({
   register,
   saleNumber,
+  mode,
+  onToggleMode,
   onOpenRegister,
   onCloseRegister,
   onWithdrawal,
@@ -42,19 +48,24 @@ export function POSHeader({
     <div className="h-14 bg-card border-b border-border flex items-center justify-between px-4">
       {/* Left - Register status */}
       <div className="flex items-center gap-4">
+        {/* Mode Toggle */}
+        <POSModeToggle mode={mode} onToggle={onToggleMode} />
+        
+        <div className="h-4 w-px bg-border" />
+
         {isOpen ? (
           <>
             <div className="flex items-center gap-2">
               <div className="w-2 h-2 rounded-full bg-success animate-pulse" />
               <span className="text-sm font-medium">Caixa #{register?.number}</span>
             </div>
-            <div className="h-4 w-px bg-border" />
-            <div className="flex items-center gap-2 text-sm text-muted-foreground">
+            <div className="h-4 w-px bg-border hidden md:block" />
+            <div className="hidden md:flex items-center gap-2 text-sm text-muted-foreground">
               <Clock className="h-4 w-4" />
               Aberto às {formatTime(register!.openedAt)}
             </div>
-            <div className="h-4 w-px bg-border" />
-            <div className="flex items-center gap-2 text-sm">
+            <div className="h-4 w-px bg-border hidden lg:block" />
+            <div className="hidden lg:flex items-center gap-2 text-sm">
               <DollarSign className="h-4 w-4 text-success" />
               <span className="text-muted-foreground">Em caixa:</span>
               <span className="font-medium text-success">{formatCurrency(register!.totalCash)}</span>
@@ -90,17 +101,17 @@ export function POSHeader({
           <>
             <button
               onClick={onWithdrawal}
-              className="flex items-center gap-2 px-3 py-1.5 rounded-lg text-sm text-destructive hover:bg-destructive/10 transition-colors"
+              className="hidden lg:flex items-center gap-2 px-3 py-1.5 rounded-lg text-sm text-destructive hover:bg-destructive/10 transition-colors"
             >
               <ArrowDownCircle className="h-4 w-4" />
-              <span className="hidden md:inline">Sangria (F10)</span>
+              <span className="hidden xl:inline">Sangria (F10)</span>
             </button>
             <button
               onClick={onDeposit}
-              className="flex items-center gap-2 px-3 py-1.5 rounded-lg text-sm text-success hover:bg-success/10 transition-colors"
+              className="hidden lg:flex items-center gap-2 px-3 py-1.5 rounded-lg text-sm text-success hover:bg-success/10 transition-colors"
             >
               <ArrowUpCircle className="h-4 w-4" />
-              <span className="hidden md:inline">Suprimento (F11)</span>
+              <span className="hidden xl:inline">Suprimento (F11)</span>
             </button>
           </>
         )}
@@ -123,7 +134,7 @@ export function POSHeader({
             className="flex items-center gap-2 px-4 py-1.5 rounded-lg text-sm bg-warning/10 text-warning hover:bg-warning/20 transition-colors font-medium"
           >
             <Lock className="h-4 w-4" />
-            Fechar Caixa
+            <span className="hidden sm:inline">Fechar Caixa</span>
           </button>
         ) : (
           <button
@@ -131,7 +142,7 @@ export function POSHeader({
             className="flex items-center gap-2 px-4 py-1.5 rounded-lg text-sm bg-success text-success-foreground hover:bg-success/90 transition-colors font-medium"
           >
             <DollarSign className="h-4 w-4" />
-            Abrir Caixa
+            <span className="hidden sm:inline">Abrir Caixa</span>
           </button>
         )}
       </div>
