@@ -1,4 +1,4 @@
-import { useState, useMemo, useCallback } from 'react';
+import { useState, useMemo, useCallback, useEffect } from 'react';
 import { ProductSearch } from './ProductSearch';
 import { QuickCategories } from './QuickCategories';
 import { ProductGrid } from './ProductGrid';
@@ -18,16 +18,50 @@ import { QuantityModal } from './QuantityModal';
 import { DiscountModal } from './DiscountModal';
 import { PriceCheckModal } from './PriceCheckModal';
 import { ShortcutsModal } from './ShortcutsModal';
-import { products, categories, quickProducts } from '@/data/mockData';
+import { useProducts, useCategories, DbProduct, DbCategory } from '@/hooks/useProducts';
+import { useOpenRegister, useCashRegisterMutations, DbCashRegister } from '@/hooks/useCashRegisterDb';
+import { useSaleMutations } from '@/hooks/useSales';
+import { useAuth } from '@/hooks/useAuth';
 import { CartItem, Product, PaymentMethod, Customer, POSModalType } from '@/types/pos';
-import { useCashRegister } from '@/hooks/useCashRegister';
 import { useKeyboardShortcuts } from '@/hooks/useKeyboardShortcuts';
 import { toast } from 'sonner';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { LayoutGrid, List } from 'lucide-react';
+import { LayoutGrid, List, Loader2 } from 'lucide-react';
+
+// Convert DB product to app Product type
+function toProduct(dbProduct: DbProduct): Product {
+  return {
+    id: dbProduct.id,
+    code: dbProduct.code,
+    barcode: dbProduct.barcode || undefined,
+    name: dbProduct.name,
+    category: dbProduct.category_id || '',
+    price: Number(dbProduct.price),
+    cost: Number(dbProduct.cost),
+    stock: Number(dbProduct.stock),
+    minStock: Number(dbProduct.min_stock),
+    unit: dbProduct.unit,
+    isWeighted: dbProduct.is_weighted,
+  };
+}
 
 export function POSScreen() {
-  const { register, isOpen, openRegister, closeRegister, addSale, addWithdrawal, addDeposit } = useCashRegister();
+  const { profile } = useAuth();
+  const { data: dbProducts = [], isLoading: loadingProducts } = useProducts();
+  const { data: dbCategories = [], isLoading: loadingCategories } = useCategories();
+  const { data: openRegister, isLoading: loadingRegister } = useOpenRegister();
+  const { openRegister: openRegisterMutation, closeRegister: closeRegisterMutation, createMovement } = useCashRegisterMutations();
+  const { createSale } = useSaleMutations();
+  
+  const products = useMemo(() => dbProducts.map(toProduct), [dbProducts]);
+  const categories = useMemo(() => dbCategories.map((c: DbCategory) => ({
+    id: c.id,
+    name: c.name,
+    icon: c.icon,
+    color: c.color,
+  })), [dbCategories]);
+
+  const quickProducts = useMemo(() => products.slice(0, 8), [products]);
   
   const [cartItems, setCartItems] = useState<CartItem[]>([]);
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
@@ -44,11 +78,13 @@ export function POSScreen() {
   const [activeModal, setActiveModal] = useState<POSModalType | null>(null);
   const [movementType, setMovementType] = useState<'withdrawal' | 'deposit'>('withdrawal');
 
+  // Check if register is open
+  const isOpen = !!openRegister && openRegister.status === 'open';
+
   const filteredProducts = useMemo(() => {
     if (!selectedCategory) return products;
-    const category = categories.find((c) => c.id === selectedCategory);
-    return products.filter((p) => p.category === category?.name);
-  }, [selectedCategory]);
+    return products.filter((p) => p.category === selectedCategory);
+  }, [selectedCategory, products]);
 
   const lastItem = useMemo(() => {
     return cartItems.length > 0 ? cartItems[cartItems.length - 1] : null;
@@ -156,69 +192,66 @@ export function POSScreen() {
   }, [cartItems.length]);
 
   const handlePaymentConfirm = useCallback((payments: { method: PaymentMethod; amount: number }[]) => {
+    if (!openRegister) return;
+
     const subtotal = cartItems.reduce((sum, item) => sum + item.subtotal, 0);
     const discountValue = totalDiscountType === 'percent' ? (subtotal * totalDiscount / 100) : totalDiscount;
     const total = subtotal - discountValue;
 
-    const sale = {
-      id: Date.now().toString(),
-      number: saleNumber,
+    createSale.mutate({
+      registerId: openRegister.id,
+      customerId: customer?.id,
       items: cartItems,
+      payments,
       subtotal,
       discount: totalDiscount,
       discountType: totalDiscountType,
       total,
-      payments,
-      customerId: customer?.id,
-      customerName: customer?.name,
-      customerCpf: customer?.cpf || customerCpf,
-      operatorId: '1',
-      operatorName: 'Operador',
-      registerId: register?.id || '',
-      createdAt: new Date(),
-      status: 'completed' as const,
       isFiado: payments.some(p => p.method === 'fiado'),
-    };
-
-    addSale(sale);
-    closeModal();
-    clearCart();
-    setSaleNumber((prev) => prev + 1);
-    toast.success('Venda realizada com sucesso!', { duration: 3000 });
-  }, [cartItems, totalDiscount, totalDiscountType, customer, customerCpf, register, saleNumber, addSale, closeModal, clearCart]);
+    }, {
+      onSuccess: () => {
+        closeModal();
+        clearCart();
+        setSaleNumber((prev) => prev + 1);
+        toast.success('Venda realizada com sucesso!', { duration: 3000 });
+      },
+    });
+  }, [cartItems, totalDiscount, totalDiscountType, customer, openRegister, createSale, closeModal, clearCart]);
 
   const handleOpenRegister = useCallback((amount: number) => {
-    openRegister(amount, '1', 'Operador');
-    closeModal();
-    toast.success(`Caixa aberto com R$ ${amount.toFixed(2).replace('.', ',')}`, { duration: 3000 });
-  }, [openRegister, closeModal]);
+    openRegisterMutation.mutate({ openingBalance: amount, registerNumber: 1 }, {
+      onSuccess: () => {
+        closeModal();
+      },
+    });
+  }, [openRegisterMutation, closeModal]);
 
   const handleCloseRegister = useCallback((closingBalance: number) => {
-    const result = closeRegister(closingBalance);
-    closeModal();
-    if (result) {
-      const diff = result.difference || 0;
-      if (diff === 0) {
-        toast.success('Caixa fechado - Valores conferem!', { duration: 3000 });
-      } else if (diff > 0) {
-        toast.warning(`Caixa fechado - Sobra de R$ ${diff.toFixed(2)}`, { duration: 5000 });
-      } else {
-        toast.error(`Caixa fechado - Falta de R$ ${Math.abs(diff).toFixed(2)}`, { duration: 5000 });
-      }
-    }
-  }, [closeRegister, closeModal]);
+    if (!openRegister) return;
+    closeRegisterMutation.mutate({ registerId: openRegister.id, closingBalance }, {
+      onSuccess: () => {
+        closeModal();
+      },
+    });
+  }, [openRegister, closeRegisterMutation, closeModal]);
 
   const handleWithdrawal = useCallback((amount: number, reason: string) => {
-    addWithdrawal(amount, reason, '1', 'Operador');
-    closeModal();
-    toast.success(`Sangria de R$ ${amount.toFixed(2).replace('.', ',')} realizada`, { duration: 3000 });
-  }, [addWithdrawal, closeModal]);
+    if (!openRegister) return;
+    createMovement.mutate({ registerId: openRegister.id, type: 'withdrawal', amount, reason }, {
+      onSuccess: () => {
+        closeModal();
+      },
+    });
+  }, [openRegister, createMovement, closeModal]);
 
   const handleDeposit = useCallback((amount: number, reason: string) => {
-    addDeposit(amount, reason, '1', 'Operador');
-    closeModal();
-    toast.success(`Suprimento de R$ ${amount.toFixed(2).replace('.', ',')} realizado`, { duration: 3000 });
-  }, [addDeposit, closeModal]);
+    if (!openRegister) return;
+    createMovement.mutate({ registerId: openRegister.id, type: 'deposit', amount, reason }, {
+      onSuccess: () => {
+        closeModal();
+      },
+    });
+  }, [openRegister, createMovement, closeModal]);
 
   const handleSelectCustomer = useCallback((selectedCustomer: Customer | null, cpf?: string) => {
     setCustomer(selectedCustomer);
@@ -279,10 +312,42 @@ export function POSScreen() {
   const discountValue = totalDiscountType === 'percent' ? (subtotal * totalDiscount / 100) : totalDiscount;
   const total = subtotal - discountValue;
 
+  // Create a mock register for header display
+  const registerForHeader = openRegister ? {
+    id: openRegister.id,
+    number: openRegister.number,
+    openedAt: new Date(openRegister.opened_at),
+    closedAt: openRegister.closed_at ? new Date(openRegister.closed_at) : undefined,
+    openingBalance: Number(openRegister.opening_balance),
+    closingBalance: openRegister.closing_balance ? Number(openRegister.closing_balance) : undefined,
+    expectedBalance: openRegister.expected_balance ? Number(openRegister.expected_balance) : undefined,
+    difference: openRegister.difference ? Number(openRegister.difference) : undefined,
+    sales: [],
+    withdrawals: [],
+    deposits: [],
+    operatorId: openRegister.operator_id,
+    operatorName: profile?.name || 'Operador',
+    status: openRegister.status as 'open' | 'closed',
+    totalSales: Number(openRegister.total_sales),
+    totalCash: Number(openRegister.total_cash),
+    totalPix: Number(openRegister.total_pix),
+    totalCredit: Number(openRegister.total_credit),
+    totalDebit: Number(openRegister.total_debit),
+    totalFiado: Number(openRegister.total_fiado),
+  } : null;
+
+  if (loadingProducts || loadingCategories || loadingRegister) {
+    return (
+      <div className="h-screen flex items-center justify-center bg-background">
+        <Loader2 className="w-8 h-8 animate-spin text-primary" />
+      </div>
+    );
+  }
+
   return (
     <div className="h-screen flex flex-col overflow-hidden bg-background">
       <POSHeader
-        register={register}
+        register={registerForHeader}
         saleNumber={saleNumber}
         onOpenRegister={() => setActiveModal('openRegister')}
         onCloseRegister={() => setActiveModal('closeRegister')}
@@ -429,12 +494,12 @@ export function POSScreen() {
         onConfirm={handleOpenRegister}
       />
 
-      {register && (
+      {registerForHeader && (
         <CloseRegisterModal
           isOpen={activeModal === 'closeRegister'}
           onClose={closeModal}
           onConfirm={handleCloseRegister}
-          register={register}
+          register={registerForHeader}
         />
       )}
 

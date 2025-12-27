@@ -9,6 +9,8 @@ import {
   Store
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { useAuth } from '@/hooks/useAuth';
+import { ThemeToggle } from '@/components/ThemeToggle';
 
 interface SidebarProps {
   currentPage: string;
@@ -25,6 +27,32 @@ const menuItems = [
 ];
 
 export function Sidebar({ currentPage, onNavigate }: SidebarProps) {
+  const { profile, role, signOut } = useAuth();
+
+  const getInitials = (name: string) => {
+    return name
+      .split(' ')
+      .map((n) => n[0])
+      .join('')
+      .toUpperCase()
+      .slice(0, 2);
+  };
+
+  const getRoleLabel = (role: string | null) => {
+    switch (role) {
+      case 'admin':
+        return 'Administrador';
+      case 'supervisor':
+        return 'Supervisor';
+      default:
+        return 'Operador';
+    }
+  };
+
+  const handleLogout = async () => {
+    await signOut();
+  };
+
   return (
     <aside className="w-20 lg:w-64 h-screen bg-sidebar border-r border-sidebar-border flex flex-col">
       {/* Logo */}
@@ -34,7 +62,7 @@ export function Sidebar({ currentPage, onNavigate }: SidebarProps) {
             <Store className="w-5 h-5 text-primary-foreground" />
           </div>
           <div className="hidden lg:block">
-            <h1 className="font-semibold text-lg text-sidebar-foreground">PDV Pro</h1>
+            <h1 className="font-semibold text-lg text-sidebar-foreground">PDV Express</h1>
             <p className="text-xs text-muted-foreground">Sistema de Vendas</p>
           </div>
         </div>
@@ -61,17 +89,31 @@ export function Sidebar({ currentPage, onNavigate }: SidebarProps) {
         })}
       </nav>
 
+      {/* Theme Toggle */}
+      <div className="px-4 py-2 border-t border-sidebar-border flex justify-center lg:justify-start">
+        <ThemeToggle />
+        <span className="hidden lg:block ml-3 text-sm text-muted-foreground self-center">Tema</span>
+      </div>
+
       {/* User */}
       <div className="p-4 border-t border-sidebar-border">
         <div className="flex items-center gap-3 px-2 py-2">
           <div className="w-9 h-9 rounded-md bg-secondary flex items-center justify-center">
-            <span className="text-sm font-medium text-secondary-foreground">JD</span>
+            <span className="text-sm font-medium text-secondary-foreground">
+              {profile?.name ? getInitials(profile.name) : '??'}
+            </span>
           </div>
           <div className="hidden lg:block flex-1 min-w-0">
-            <p className="font-medium text-sm truncate text-sidebar-foreground">João da Silva</p>
-            <p className="text-xs text-muted-foreground">Operador</p>
+            <p className="font-medium text-sm truncate text-sidebar-foreground">
+              {profile?.name || 'Carregando...'}
+            </p>
+            <p className="text-xs text-muted-foreground">{getRoleLabel(role)}</p>
           </div>
-          <button className="hidden lg:flex p-2 rounded-md hover:bg-secondary text-muted-foreground hover:text-foreground transition-colors">
+          <button 
+            onClick={handleLogout}
+            className="hidden lg:flex p-2 rounded-md hover:bg-secondary text-muted-foreground hover:text-foreground transition-colors"
+            title="Sair"
+          >
             <LogOut className="w-4 h-4" />
           </button>
         </div>
