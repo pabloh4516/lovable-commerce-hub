@@ -29,7 +29,7 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { useStockMutations, StockMovementType } from '@/hooks/useStockMovements';
-import { Product } from '@/types/pos';
+import { DbProduct } from '@/hooks/useProducts';
 
 const movementSchema = z.object({
   quantity: z.number().positive('Quantidade deve ser maior que zero'),
@@ -45,7 +45,7 @@ type MovementForm = z.infer<typeof movementSchema>;
 interface StockMovementModalProps {
   open: boolean;
   onClose: () => void;
-  product?: Product | null;
+  product?: DbProduct | null;
   initialType?: StockMovementType;
 }
 

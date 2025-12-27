@@ -6,6 +6,10 @@ import { ProductsPage } from '@/components/pos/ProductsPage';
 import { ReportsPage } from '@/components/pos/ReportsPage';
 import { UsersPage } from '@/components/pos/UsersPage';
 import { SettingsPage } from '@/components/pos/SettingsPage';
+import { StockPage } from '@/components/pos/StockPage';
+import { PromotionsManager } from '@/components/pos/PromotionsManager';
+import { StoresManager } from '@/components/pos/StoresManager';
+import { AuditPage } from '@/components/pos/AuditPage';
 import { mockDashboardStats } from '@/data/mockData';
 import { useFullscreen } from '@/hooks/useFullscreen';
 import { usePOSMode } from '@/hooks/usePOSMode';
@@ -27,6 +31,14 @@ const Index = () => {
         return <Dashboard stats={mockDashboardStats} />;
       case 'products':
         return <ProductsPage />;
+      case 'stock':
+        return <StockPage />;
+      case 'promotions':
+        return <PromotionsManager />;
+      case 'stores':
+        return <StoresManager />;
+      case 'audit':
+        return <AuditPage />;
       case 'reports':
         return <ReportsPage />;
       case 'users':
