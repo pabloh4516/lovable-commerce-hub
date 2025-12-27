@@ -204,6 +204,54 @@ export type Database = {
         }
         Relationships: []
       }
+      customer_points: {
+        Row: {
+          available_points: number
+          created_at: string | null
+          customer_id: string
+          id: string
+          program_id: string
+          redeemed_points: number
+          total_points: number
+          updated_at: string | null
+        }
+        Insert: {
+          available_points?: number
+          created_at?: string | null
+          customer_id: string
+          id?: string
+          program_id: string
+          redeemed_points?: number
+          total_points?: number
+          updated_at?: string | null
+        }
+        Update: {
+          available_points?: number
+          created_at?: string | null
+          customer_id?: string
+          id?: string
+          program_id?: string
+          redeemed_points?: number
+          total_points?: number
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "customer_points_customer_id_fkey"
+            columns: ["customer_id"]
+            isOneToOne: false
+            referencedRelation: "customers"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "customer_points_program_id_fkey"
+            columns: ["program_id"]
+            isOneToOne: false
+            referencedRelation: "loyalty_programs"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       customers: {
         Row: {
           address: string | null
@@ -245,6 +293,53 @@ export type Database = {
           updated_at?: string
         }
         Relationships: []
+      }
+      loyalty_programs: {
+        Row: {
+          created_at: string | null
+          description: string | null
+          id: string
+          is_active: boolean
+          min_points_redeem: number
+          name: string
+          points_per_real: number
+          points_value: number
+          store_id: string | null
+          updated_at: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          description?: string | null
+          id?: string
+          is_active?: boolean
+          min_points_redeem?: number
+          name: string
+          points_per_real?: number
+          points_value?: number
+          store_id?: string | null
+          updated_at?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          description?: string | null
+          id?: string
+          is_active?: boolean
+          min_points_redeem?: number
+          name?: string
+          points_per_real?: number
+          points_value?: number
+          store_id?: string | null
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "loyalty_programs_store_id_fkey"
+            columns: ["store_id"]
+            isOneToOne: false
+            referencedRelation: "stores"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       payments: {
         Row: {
@@ -304,6 +399,64 @@ export type Database = {
           name?: string
         }
         Relationships: []
+      }
+      point_transactions: {
+        Row: {
+          created_at: string | null
+          customer_id: string
+          description: string | null
+          id: string
+          operator_id: string | null
+          points: number
+          program_id: string
+          sale_id: string | null
+          type: string
+        }
+        Insert: {
+          created_at?: string | null
+          customer_id: string
+          description?: string | null
+          id?: string
+          operator_id?: string | null
+          points: number
+          program_id: string
+          sale_id?: string | null
+          type: string
+        }
+        Update: {
+          created_at?: string | null
+          customer_id?: string
+          description?: string | null
+          id?: string
+          operator_id?: string | null
+          points?: number
+          program_id?: string
+          sale_id?: string | null
+          type?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "point_transactions_customer_id_fkey"
+            columns: ["customer_id"]
+            isOneToOne: false
+            referencedRelation: "customers"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "point_transactions_program_id_fkey"
+            columns: ["program_id"]
+            isOneToOne: false
+            referencedRelation: "loyalty_programs"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "point_transactions_sale_id_fkey"
+            columns: ["sale_id"]
+            isOneToOne: false
+            referencedRelation: "sales"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       products: {
         Row: {
