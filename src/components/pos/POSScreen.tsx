@@ -23,6 +23,7 @@ import { useProducts, useCategories, DbProduct, DbCategory } from '@/hooks/usePr
 import { useOpenRegister, useCashRegisterMutations, DbCashRegister } from '@/hooks/useCashRegisterDb';
 import { useSaleMutations } from '@/hooks/useSales';
 import { useAuth } from '@/hooks/useAuth';
+import { useStoreSettings } from '@/hooks/useStoreSettings';
 import { CartItem, Product, PaymentMethod, Customer, POSModalType } from '@/types/pos';
 import { useKeyboardShortcuts } from '@/hooks/useKeyboardShortcuts';
 import { toast } from 'sonner';
@@ -51,6 +52,7 @@ export function POSScreen() {
   const { data: dbProducts = [], isLoading: loadingProducts } = useProducts();
   const { data: dbCategories = [], isLoading: loadingCategories } = useCategories();
   const { data: openRegister, isLoading: loadingRegister } = useOpenRegister();
+  const { data: storeSettings } = useStoreSettings();
   const { openRegister: openRegisterMutation, closeRegister: closeRegisterMutation, createMovement } = useCashRegisterMutations();
   const { createSale } = useSaleMutations();
   
@@ -229,7 +231,10 @@ export function POSScreen() {
       customer,
       customerCpf,
       operatorName: profile?.name || 'Operador',
-      storeName: 'PDV Express',
+      storeName: storeSettings?.name || 'Minha Loja',
+      storeAddress: storeSettings?.address || undefined,
+      storeCnpj: storeSettings?.cnpj || undefined,
+      storePhone: storeSettings?.phone || undefined,
       createdAt: new Date(),
     };
 
