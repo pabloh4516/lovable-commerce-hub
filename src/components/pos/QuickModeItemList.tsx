@@ -1,11 +1,11 @@
 import { useRef, useEffect } from 'react';
-import { CartItem } from '@/types/pos';
+import { CartItemWithPromotion } from '@/hooks/useCartWithPromotions';
 import { ScrollArea } from '@/components/ui/scroll-area';
 
 interface QuickModeItemListProps {
-  items: CartItem[];
+  items: CartItemWithPromotion[];
   selectedItemId: string | null;
-  onSelectItem: (item: CartItem | null) => void;
+  onSelectItem: (item: CartItemWithPromotion | null) => void;
 }
 
 export function QuickModeItemList({ items, selectedItemId, onSelectItem }: QuickModeItemListProps) {
