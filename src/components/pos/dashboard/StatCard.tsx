@@ -1,4 +1,4 @@
-import { LucideIcon, ArrowUpRight, ArrowDownRight } from 'lucide-react';
+import { LucideIcon, ArrowUpRight, ArrowDownRight, TrendingUp } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { AnimatedCounter } from './AnimatedCounter';
 import { Sparkline } from './Sparkline';
@@ -13,9 +13,11 @@ interface StatCardProps {
   changeLabel?: string;
   icon: LucideIcon;
   iconColor?: string;
+  iconBgColor?: string;
   sparklineData?: number[];
   delay?: number;
   className?: string;
+  variant?: 'default' | 'gradient' | 'glass';
 }
 
 export function StatCard({
@@ -28,41 +30,67 @@ export function StatCard({
   changeLabel,
   icon: Icon,
   iconColor = 'text-primary',
+  iconBgColor = 'bg-primary/10',
   sparklineData,
   delay = 0,
   className,
+  variant = 'default',
 }: StatCardProps) {
   const isPositive = change !== undefined && change >= 0;
+
+  const variantClasses = {
+    default: 'bg-card border border-border/50',
+    gradient: 'bg-gradient-to-br from-card via-card to-primary/5 border border-border/50',
+    glass: 'bg-card/80 backdrop-blur-xl border border-border/30',
+  };
 
   return (
     <div
       className={cn(
-        'group relative overflow-hidden rounded-2xl border border-border/50 bg-card p-5',
-        'hover:border-primary/30 hover:shadow-glow transition-all duration-300',
+        'group relative overflow-hidden rounded-2xl p-6',
+        'shadow-md hover:shadow-glow transition-all duration-500',
+        'hover:-translate-y-1 hover:border-primary/40',
+        variantClasses[variant],
         'animate-scale-in',
         className
       )}
       style={{ animationDelay: `${delay}ms` }}
     >
-      {/* Background gradient */}
-      <div className="absolute inset-0 bg-gradient-to-br from-primary/5 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
+      {/* Animated background gradient on hover */}
+      <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-700">
+        <div className="absolute inset-0 bg-gradient-to-br from-primary/10 via-transparent to-transparent" />
+        <div className="absolute -top-24 -right-24 w-48 h-48 bg-primary/10 rounded-full blur-3xl group-hover:scale-150 transition-transform duration-700" />
+      </div>
+      
+      {/* Shimmer effect on hover */}
+      <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-500">
+        <div className="absolute inset-0 -translate-x-full group-hover:translate-x-full transition-transform duration-1000 bg-gradient-to-r from-transparent via-primary/5 to-transparent" />
+      </div>
       
       <div className="relative z-10">
-        {/* Header */}
-        <div className="flex items-start justify-between mb-4">
+        {/* Header with icon and badge */}
+        <div className="flex items-start justify-between mb-5">
           <div className={cn(
-            'w-11 h-11 rounded-xl flex items-center justify-center',
-            'bg-primary/10 group-hover:bg-primary/20 transition-colors'
+            'relative w-14 h-14 rounded-2xl flex items-center justify-center',
+            'transition-all duration-300 group-hover:scale-110',
+            iconBgColor
           )}>
-            <Icon className={cn('w-5 h-5', iconColor)} />
+            <Icon className={cn('w-6 h-6 transition-transform duration-300 group-hover:scale-110', iconColor)} />
+            {/* Icon glow */}
+            <div className={cn(
+              'absolute inset-0 rounded-2xl opacity-0 group-hover:opacity-100 transition-opacity duration-500',
+              'blur-xl',
+              iconBgColor
+            )} />
           </div>
           
           {change !== undefined && (
             <div className={cn(
-              'flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-semibold',
+              'flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-bold',
+              'transition-all duration-300 group-hover:scale-105',
               isPositive 
-                ? 'bg-success/10 text-success' 
-                : 'bg-destructive/10 text-destructive'
+                ? 'bg-success/15 text-success border border-success/20' 
+                : 'bg-destructive/15 text-destructive border border-destructive/20'
             )}>
               {isPositive ? (
                 <ArrowUpRight className="w-3.5 h-3.5" />
@@ -74,35 +102,39 @@ export function StatCard({
           )}
         </div>
 
-        {/* Value */}
-        <div className="mb-1">
+        {/* Value with animated counter */}
+        <div className="mb-2">
           <AnimatedCounter
             value={value}
             prefix={prefix}
             suffix={suffix}
             decimals={decimals}
             delay={delay + 200}
-            className="text-3xl font-bold"
+            className="text-4xl font-bold tracking-tight"
           />
         </div>
 
-        {/* Title */}
-        <p className="text-sm text-muted-foreground mb-3">{title}</p>
+        {/* Title and change label */}
+        <div className="flex items-center justify-between mb-4">
+          <p className="text-sm font-medium text-muted-foreground">{title}</p>
+          {changeLabel && (
+            <p className="text-xs text-muted-foreground/70 flex items-center gap-1">
+              <TrendingUp className="w-3 h-3" />
+              {changeLabel}
+            </p>
+          )}
+        </div>
 
         {/* Sparkline */}
         {sparklineData && sparklineData.length > 0 && (
-          <div className="pt-2 border-t border-border/50">
+          <div className="pt-4 border-t border-border/30">
             <Sparkline 
               data={sparklineData} 
-              height={32}
+              height={40}
               color={isPositive ? 'hsl(var(--success))' : 'hsl(var(--destructive))'}
+              showGradient
             />
           </div>
-        )}
-
-        {/* Change label */}
-        {changeLabel && (
-          <p className="text-xs text-muted-foreground mt-2">{changeLabel}</p>
         )}
       </div>
     </div>
