@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
@@ -15,12 +15,15 @@ import {
   MoreHorizontal,
   UserCheck,
   UserX,
-  Building2
+  Building2,
+  Users,
+  Filter
 } from 'lucide-react';
 import { useAuth } from '@/hooks/useAuth';
 import { useUsers, useUserMutations, UserWithRole } from '@/hooks/useUsers';
 import { useStores, useStoreMutations } from '@/hooks/useStores';
 import { UserEditModal } from './UserEditModal';
+import { UserCreateModal } from './UserCreateModal';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -41,21 +44,39 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from '@/components/ui/alert-dialog';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
 
 export function UsersPage() {
   const [searchQuery, setSearchQuery] = useState('');
+  const [roleFilter, setRoleFilter] = useState<string>('all');
   const [editingUser, setEditingUser] = useState<UserWithRole | null>(null);
   const [statusChangeUser, setStatusChangeUser] = useState<UserWithRole | null>(null);
-  const { isAdmin } = useAuth();
+  const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
+  const { isAdmin, isSupervisor } = useAuth();
   const { data: users = [], isLoading } = useUsers();
   const { toggleUserStatus } = useUserMutations();
   const { data: stores = [] } = useStores();
   const { assignUserToStore } = useStoreMutations();
 
-  const filteredUsers = users.filter(user =>
-    user.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    user.code.toLowerCase().includes(searchQuery.toLowerCase())
-  );
+  const filteredUsers = users.filter(user => {
+    const matchesSearch = user.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      user.code.toLowerCase().includes(searchQuery.toLowerCase());
+    const matchesRole = roleFilter === 'all' || user.role === roleFilter || (roleFilter === 'operator' && !user.role);
+    return matchesSearch && matchesRole;
+  });
+
+  const userCounts = {
+    total: users.length,
+    admins: users.filter(u => u.role === 'admin').length,
+    supervisors: users.filter(u => u.role === 'supervisor').length,
+    operators: users.filter(u => !u.role || u.role === 'operator').length,
+  };
 
   const getRoleBadge = (role: string | null) => {
     switch (role) {
@@ -102,25 +123,88 @@ export function UsersPage() {
 
   return (
     <div className="p-6 space-y-6 overflow-auto h-full">
+      {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-bold">Usuários</h1>
+          <h1 className="text-2xl font-bold flex items-center gap-2">
+            <Users className="w-6 h-6 text-primary" />
+            Gestão de Usuários
+          </h1>
           <p className="text-muted-foreground">
-            {users.length} usuários cadastrados
+            Cadastre e gerencie gerentes e funcionários
           </p>
         </div>
         
         {isAdmin && (
-          <Button className="gap-2">
+          <Button className="gap-2" onClick={() => setIsCreateModalOpen(true)}>
             <UserPlus className="w-4 h-4" />
             Novo Usuário
           </Button>
         )}
       </div>
 
+      {/* Stats Cards */}
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+        <Card>
+          <CardContent className="p-4">
+            <div className="flex items-center gap-3">
+              <div className="p-2 bg-primary/10 rounded-lg">
+                <Users className="w-5 h-5 text-primary" />
+              </div>
+              <div>
+                <p className="text-2xl font-bold">{userCounts.total}</p>
+                <p className="text-xs text-muted-foreground">Total</p>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+        <Card>
+          <CardContent className="p-4">
+            <div className="flex items-center gap-3">
+              <div className="p-2 bg-primary/10 rounded-lg">
+                <Shield className="w-5 h-5 text-primary" />
+              </div>
+              <div>
+                <p className="text-2xl font-bold">{userCounts.admins}</p>
+                <p className="text-xs text-muted-foreground">Gerentes</p>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+        <Card>
+          <CardContent className="p-4">
+            <div className="flex items-center gap-3">
+              <div className="p-2 bg-warning/10 rounded-lg">
+                <ShieldCheck className="w-5 h-5 text-warning" />
+              </div>
+              <div>
+                <p className="text-2xl font-bold">{userCounts.supervisors}</p>
+                <p className="text-xs text-muted-foreground">Supervisores</p>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+        <Card>
+          <CardContent className="p-4">
+            <div className="flex items-center gap-3">
+              <div className="p-2 bg-secondary rounded-lg">
+                <User className="w-5 h-5 text-muted-foreground" />
+              </div>
+              <div>
+                <p className="text-2xl font-bold">{userCounts.operators}</p>
+                <p className="text-xs text-muted-foreground">Operadores</p>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+
+      {/* Users Table */}
       <Card>
         <CardHeader>
-          <div className="flex items-center gap-4">
+          <CardTitle>Lista de Usuários</CardTitle>
+          <CardDescription>Gerentes, supervisores e operadores do sistema</CardDescription>
+          <div className="flex flex-col sm:flex-row gap-4 pt-2">
             <div className="relative flex-1 max-w-md">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
               <Input
@@ -130,6 +214,18 @@ export function UsersPage() {
                 className="pl-10"
               />
             </div>
+            <Select value={roleFilter} onValueChange={setRoleFilter}>
+              <SelectTrigger className="w-[180px]">
+                <Filter className="w-4 h-4 mr-2" />
+                <SelectValue placeholder="Filtrar por função" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">Todas as funções</SelectItem>
+                <SelectItem value="admin">Gerentes</SelectItem>
+                <SelectItem value="supervisor">Supervisores</SelectItem>
+                <SelectItem value="operator">Operadores</SelectItem>
+              </SelectContent>
+            </Select>
           </div>
         </CardHeader>
         <CardContent>
@@ -230,6 +326,12 @@ export function UsersPage() {
           )}
         </CardContent>
       </Card>
+
+      {/* Modals */}
+      <UserCreateModal
+        open={isCreateModalOpen}
+        onOpenChange={setIsCreateModalOpen}
+      />
 
       <UserEditModal
         user={editingUser}
