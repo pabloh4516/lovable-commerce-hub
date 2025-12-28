@@ -113,27 +113,27 @@ export function AppHeader({ currentPage, onNavigate }: AppHeaderProps) {
   };
 
   return (
-    <header className="h-14 bg-card border-b border-border flex items-center px-4 gap-2">
+    <header className="h-16 bg-card border-b border-border flex items-center px-5 gap-3">
       {/* Logo */}
-      <div className="flex items-center gap-2.5 pr-4 border-r border-border">
-        <div className="w-8 h-8 rounded-lg bg-primary flex items-center justify-center">
-          <Store className="w-4 h-4 text-primary-foreground" />
+      <div className="flex items-center gap-3 pr-5 border-r border-border">
+        <div className="w-10 h-10 rounded-xl bg-primary flex items-center justify-center shadow-sm">
+          <Store className="w-5 h-5 text-primary-foreground" />
         </div>
-        <span className="font-semibold text-sm hidden lg:block">PDV Express</span>
+        <span className="font-semibold text-base hidden lg:block">PDV Express</span>
       </div>
 
       {/* Caixa Button - Highlighted */}
       <button
         onClick={() => onNavigate('pos')}
         className={cn(
-          "flex items-center gap-2 px-4 py-2 rounded-lg font-medium transition-all duration-200 ml-2",
+          "flex items-center gap-2.5 px-5 py-2.5 rounded-xl font-medium transition-all duration-200 ml-2",
           currentPage === 'pos'
             ? "bg-primary text-primary-foreground shadow-md"
             : "bg-primary/10 text-primary hover:bg-primary hover:text-primary-foreground"
         )}
       >
-        <ShoppingCart className="w-4 h-4" />
-        <span>Caixa</span>
+        <ShoppingCart className="w-5 h-5" />
+        <span className="text-sm">Caixa</span>
       </button>
 
       {/* Navigation Sections - Desktop */}
@@ -143,7 +143,7 @@ export function AppHeader({ currentPage, onNavigate }: AppHeaderProps) {
             <NavigationMenuItem key={section.id}>
               <NavigationMenuTrigger 
                 className={cn(
-                  "bg-transparent h-9 px-3 text-sm font-medium data-[state=open]:bg-secondary",
+                  "bg-transparent h-10 px-4 text-sm font-medium data-[state=open]:bg-secondary",
                   isSectionActive(section) && "text-primary"
                 )}
               >
@@ -184,7 +184,7 @@ export function AppHeader({ currentPage, onNavigate }: AppHeaderProps) {
       {/* Mobile Menu */}
       <DropdownMenu>
         <DropdownMenuTrigger asChild className="md:hidden">
-          <button className="flex items-center gap-1 px-3 py-2 rounded-lg text-sm font-medium hover:bg-secondary transition-colors ml-2">
+          <button className="flex items-center gap-1.5 px-4 py-2.5 rounded-xl text-sm font-medium hover:bg-secondary transition-colors ml-2">
             Menu
             <ChevronDown className="w-4 h-4" />
           </button>
@@ -231,9 +231,9 @@ export function AppHeader({ currentPage, onNavigate }: AppHeaderProps) {
       </div>
 
       {/* Time */}
-      <div className="hidden sm:flex items-center gap-1.5 text-sm text-muted-foreground">
-        <Clock className="w-3.5 h-3.5" />
-        <span className="tabular-nums">{formatTime(currentTime)}</span>
+      <div className="hidden sm:flex items-center gap-2 text-sm text-muted-foreground px-2">
+        <Clock className="w-4 h-4" />
+        <span className="tabular-nums font-medium">{formatTime(currentTime)}</span>
       </div>
 
       {/* Notifications */}
@@ -245,25 +245,25 @@ export function AppHeader({ currentPage, onNavigate }: AppHeaderProps) {
       {/* Theme Toggle */}
       <button
         onClick={() => setTheme(theme === 'dark' ? 'light' : 'dark')}
-        className="w-8 h-8 rounded-lg flex items-center justify-center hover:bg-secondary transition-colors"
+        className="w-10 h-10 rounded-xl flex items-center justify-center hover:bg-secondary transition-colors"
       >
         {theme === 'dark' ? (
-          <Sun className="w-4 h-4" />
+          <Sun className="w-5 h-5" />
         ) : (
-          <Moon className="w-4 h-4" />
+          <Moon className="w-5 h-5" />
         )}
       </button>
 
       {/* User Menu */}
       <DropdownMenu>
         <DropdownMenuTrigger asChild>
-          <button className="flex items-center gap-2 pl-3 border-l border-border">
-            <div className="w-8 h-8 rounded-lg bg-primary/10 text-primary flex items-center justify-center text-xs font-semibold">
-              {profile?.name ? getInitials(profile.name) : <User className="w-4 h-4" />}
+          <button className="flex items-center gap-3 pl-4 border-l border-border">
+            <div className="w-10 h-10 rounded-xl bg-primary/10 text-primary flex items-center justify-center text-sm font-semibold">
+              {profile?.name ? getInitials(profile.name) : <User className="w-5 h-5" />}
             </div>
             <div className="hidden sm:block text-left">
               <p className="text-sm font-medium leading-none">{profile?.name || 'Usuário'}</p>
-              <p className="text-xs text-muted-foreground mt-0.5">{profile?.code || ''}</p>
+              <p className="text-xs text-muted-foreground mt-1">{profile?.code || ''}</p>
             </div>
           </button>
         </DropdownMenuTrigger>
