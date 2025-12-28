@@ -135,7 +135,7 @@ export function UsersPage() {
           </p>
         </div>
         
-        {isAdmin && (
+        {(isAdmin || isSupervisor || users.length === 0) && (
           <Button className="gap-2" onClick={() => setIsCreateModalOpen(true)}>
             <UserPlus className="w-4 h-4" />
             Novo Usuário
@@ -241,7 +241,7 @@ export function UsersPage() {
                   <TableHead>Código</TableHead>
                   <TableHead>Função</TableHead>
                   <TableHead>Status</TableHead>
-                  {isAdmin && <TableHead className="w-16" />}
+                  {(isAdmin || isSupervisor) && <TableHead className="w-16" />}
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -261,7 +261,7 @@ export function UsersPage() {
                         </Badge>
                       )}
                     </TableCell>
-                    {isAdmin && (
+                    {(isAdmin || isSupervisor) && (
                       <TableCell>
                         <DropdownMenu>
                           <DropdownMenuTrigger asChild>
@@ -274,20 +274,22 @@ export function UsersPage() {
                               <Edit2 className="w-4 h-4 mr-2" />
                               Editar
                             </DropdownMenuItem>
-                            <DropdownMenuItem onClick={() => setStatusChangeUser(user)}>
-                              {user.is_active ? (
-                                <>
-                                  <UserX className="w-4 h-4 mr-2" />
-                                  Desativar
-                                </>
-                              ) : (
-                                <>
-                                  <UserCheck className="w-4 h-4 mr-2" />
-                                  Ativar
-                                </>
-                              )}
-                            </DropdownMenuItem>
-                            {stores.length > 0 && (
+                            {isAdmin && (
+                              <DropdownMenuItem onClick={() => setStatusChangeUser(user)}>
+                                {user.is_active ? (
+                                  <>
+                                    <UserX className="w-4 h-4 mr-2" />
+                                    Desativar
+                                  </>
+                                ) : (
+                                  <>
+                                    <UserCheck className="w-4 h-4 mr-2" />
+                                    Ativar
+                                  </>
+                                )}
+                              </DropdownMenuItem>
+                            )}
+                            {isAdmin && stores.length > 0 && (
                               <>
                                 <DropdownMenuSeparator />
                                 <DropdownMenuSub>
@@ -316,7 +318,7 @@ export function UsersPage() {
                 ))}
                 {filteredUsers.length === 0 && (
                   <TableRow>
-                    <TableCell colSpan={isAdmin ? 5 : 4} className="text-center text-muted-foreground py-8">
+                    <TableCell colSpan={(isAdmin || isSupervisor) ? 5 : 4} className="text-center text-muted-foreground py-8">
                       Nenhum usuário encontrado
                     </TableCell>
                   </TableRow>
