@@ -89,8 +89,11 @@ export interface DashboardStats {
   todaySales: number;
   todayRevenue: number;
   averageTicket: number;
-  topProducts: { product: Product; quantity: number }[];
-  salesByPaymentMethod: { method: PaymentMethod; total: number }[];
+  productsSold?: number;
+  revenueChange?: number;
+  salesChange?: number;
+  topProducts: { id?: string; name?: string; product?: Product; quantity: number; revenue?: number; rank?: number }[];
+  salesByPaymentMethod: { method: PaymentMethod; total: number }[] | Record<string, number>;
 }
 
 export interface Category {

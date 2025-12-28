@@ -4,7 +4,7 @@ import { cn } from '@/lib/utils';
 import { AnimatedCounter } from './AnimatedCounter';
 
 interface PaymentMethodsChartProps {
-  data: { method: PaymentMethod; total: number }[];
+  data: { method: PaymentMethod; total: number }[] | Record<string, number>;
   totalRevenue: number;
 }
 
@@ -17,7 +17,15 @@ const methodConfig: Record<PaymentMethod, { label: string; color: string; bgColo
 };
 
 export function PaymentMethodsChart({ data, totalRevenue }: PaymentMethodsChartProps) {
-  const chartData = data.map(item => ({
+  // Normalize data to array format
+  const normalizedData: { method: PaymentMethod; total: number }[] = Array.isArray(data) 
+    ? data 
+    : Object.entries(data).map(([method, total]) => ({ 
+        method: method as PaymentMethod, 
+        total: total as number 
+      }));
+
+  const chartData = normalizedData.map(item => ({
     name: methodConfig[item.method]?.label || item.method,
     value: item.total,
     color: methodConfig[item.method]?.color || 'hsl(var(--muted))',
@@ -77,7 +85,7 @@ export function PaymentMethodsChart({ data, totalRevenue }: PaymentMethodsChartP
 
         {/* Legend */}
         <div className="flex-1 space-y-3">
-          {data.map((item, index) => {
+          {normalizedData.map((item, index) => {
             const config = methodConfig[item.method];
             const percentage = totalRevenue > 0 ? (item.total / totalRevenue) * 100 : 0;
             
