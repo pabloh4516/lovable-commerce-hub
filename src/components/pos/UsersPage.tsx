@@ -4,54 +4,53 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
-import { useQuery } from '@tanstack/react-query';
-import { supabase } from '@/integrations/supabase/client';
-import { Search, UserPlus, Shield, ShieldCheck, User, Loader2 } from 'lucide-react';
+import { 
+  Search, 
+  UserPlus, 
+  Shield, 
+  ShieldCheck, 
+  User, 
+  Loader2, 
+  Edit2, 
+  MoreHorizontal,
+  UserCheck,
+  UserX,
+  Building2
+} from 'lucide-react';
 import { useAuth } from '@/hooks/useAuth';
-
-interface UserWithRole {
-  id: string;
-  user_id: string;
-  name: string;
-  code: string;
-  is_active: boolean;
-  created_at: string;
-  role: 'operator' | 'supervisor' | 'admin' | null;
-}
+import { useUsers, useUserMutations, UserWithRole } from '@/hooks/useUsers';
+import { useStores, useStoreMutations } from '@/hooks/useStores';
+import { UserEditModal } from './UserEditModal';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+  DropdownMenuSub,
+  DropdownMenuSubTrigger,
+  DropdownMenuSubContent,
+} from '@/components/ui/dropdown-menu';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from '@/components/ui/alert-dialog';
 
 export function UsersPage() {
   const [searchQuery, setSearchQuery] = useState('');
+  const [editingUser, setEditingUser] = useState<UserWithRole | null>(null);
+  const [statusChangeUser, setStatusChangeUser] = useState<UserWithRole | null>(null);
   const { isAdmin } = useAuth();
-
-  const { data: users = [], isLoading } = useQuery({
-    queryKey: ['users'],
-    queryFn: async () => {
-      const { data: profiles, error: profilesError } = await supabase
-        .from('profiles')
-        .select('*')
-        .order('name');
-
-      if (profilesError) throw profilesError;
-
-      // Get roles for each user
-      const usersWithRoles: UserWithRole[] = await Promise.all(
-        profiles.map(async (profile) => {
-          const { data: roleData } = await supabase
-            .from('user_roles')
-            .select('role')
-            .eq('user_id', profile.user_id)
-            .maybeSingle();
-
-          return {
-            ...profile,
-            role: roleData?.role as 'operator' | 'supervisor' | 'admin' | null,
-          };
-        })
-      );
-
-      return usersWithRoles;
-    },
-  });
+  const { data: users = [], isLoading } = useUsers();
+  const { toggleUserStatus } = useUserMutations();
+  const { data: stores = [] } = useStores();
+  const { assignUserToStore } = useStoreMutations();
 
   const filteredUsers = users.filter(user =>
     user.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -69,7 +68,7 @@ export function UsersPage() {
         );
       case 'supervisor':
         return (
-          <Badge variant="secondary" className="gap-1">
+          <Badge variant="secondary" className="gap-1 bg-warning/10 text-warning border-warning/20">
             <ShieldCheck className="w-3 h-3" />
             Supervisor
           </Badge>
@@ -82,6 +81,23 @@ export function UsersPage() {
           </Badge>
         );
     }
+  };
+
+  const handleToggleStatus = async () => {
+    if (!statusChangeUser) return;
+    await toggleUserStatus.mutateAsync({
+      userId: statusChangeUser.user_id,
+      isActive: !statusChangeUser.is_active,
+    });
+    setStatusChangeUser(null);
+  };
+
+  const handleAssignStore = async (userId: string, storeId: string) => {
+    await assignUserToStore.mutateAsync({
+      userId,
+      storeId,
+      isPrimary: true,
+    });
   };
 
   return (
@@ -129,30 +145,82 @@ export function UsersPage() {
                   <TableHead>Código</TableHead>
                   <TableHead>Função</TableHead>
                   <TableHead>Status</TableHead>
+                  {isAdmin && <TableHead className="w-16" />}
                 </TableRow>
               </TableHeader>
               <TableBody>
                 {filteredUsers.map((user) => (
                   <TableRow key={user.id}>
                     <TableCell className="font-medium">{user.name}</TableCell>
-                    <TableCell className="font-mono">{user.code}</TableCell>
+                    <TableCell className="font-mono text-muted-foreground">{user.code}</TableCell>
                     <TableCell>{getRoleBadge(user.role)}</TableCell>
                     <TableCell>
                       {user.is_active ? (
-                        <Badge variant="outline" className="text-green-600 border-green-600">
+                        <Badge variant="outline" className="text-success border-success/30 bg-success/10">
                           Ativo
                         </Badge>
                       ) : (
-                        <Badge variant="outline" className="text-red-600 border-red-600">
+                        <Badge variant="outline" className="text-destructive border-destructive/30 bg-destructive/10">
                           Inativo
                         </Badge>
                       )}
                     </TableCell>
+                    {isAdmin && (
+                      <TableCell>
+                        <DropdownMenu>
+                          <DropdownMenuTrigger asChild>
+                            <Button variant="ghost" size="icon">
+                              <MoreHorizontal className="w-4 h-4" />
+                            </Button>
+                          </DropdownMenuTrigger>
+                          <DropdownMenuContent align="end">
+                            <DropdownMenuItem onClick={() => setEditingUser(user)}>
+                              <Edit2 className="w-4 h-4 mr-2" />
+                              Editar
+                            </DropdownMenuItem>
+                            <DropdownMenuItem onClick={() => setStatusChangeUser(user)}>
+                              {user.is_active ? (
+                                <>
+                                  <UserX className="w-4 h-4 mr-2" />
+                                  Desativar
+                                </>
+                              ) : (
+                                <>
+                                  <UserCheck className="w-4 h-4 mr-2" />
+                                  Ativar
+                                </>
+                              )}
+                            </DropdownMenuItem>
+                            {stores.length > 0 && (
+                              <>
+                                <DropdownMenuSeparator />
+                                <DropdownMenuSub>
+                                  <DropdownMenuSubTrigger>
+                                    <Building2 className="w-4 h-4 mr-2" />
+                                    Vincular à Loja
+                                  </DropdownMenuSubTrigger>
+                                  <DropdownMenuSubContent>
+                                    {stores.map((store) => (
+                                      <DropdownMenuItem
+                                        key={store.id}
+                                        onClick={() => handleAssignStore(user.user_id, store.id)}
+                                      >
+                                        {store.name}
+                                      </DropdownMenuItem>
+                                    ))}
+                                  </DropdownMenuSubContent>
+                                </DropdownMenuSub>
+                              </>
+                            )}
+                          </DropdownMenuContent>
+                        </DropdownMenu>
+                      </TableCell>
+                    )}
                   </TableRow>
                 ))}
                 {filteredUsers.length === 0 && (
                   <TableRow>
-                    <TableCell colSpan={4} className="text-center text-muted-foreground py-8">
+                    <TableCell colSpan={isAdmin ? 5 : 4} className="text-center text-muted-foreground py-8">
                       Nenhum usuário encontrado
                     </TableCell>
                   </TableRow>
@@ -162,6 +230,33 @@ export function UsersPage() {
           )}
         </CardContent>
       </Card>
+
+      <UserEditModal
+        user={editingUser}
+        open={!!editingUser}
+        onOpenChange={(open) => !open && setEditingUser(null)}
+      />
+
+      <AlertDialog open={!!statusChangeUser} onOpenChange={(open) => !open && setStatusChangeUser(null)}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>
+              {statusChangeUser?.is_active ? 'Desativar usuário?' : 'Ativar usuário?'}
+            </AlertDialogTitle>
+            <AlertDialogDescription>
+              {statusChangeUser?.is_active
+                ? `O usuário "${statusChangeUser?.name}" não poderá mais acessar o sistema.`
+                : `O usuário "${statusChangeUser?.name}" poderá acessar o sistema novamente.`}
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancelar</AlertDialogCancel>
+            <AlertDialogAction onClick={handleToggleStatus}>
+              {statusChangeUser?.is_active ? 'Desativar' : 'Ativar'}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }
