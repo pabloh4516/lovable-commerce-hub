@@ -3,8 +3,17 @@ import { Product } from '@/types/pos';
 import { cn } from '@/lib/utils';
 import { AnimatedCounter } from './AnimatedCounter';
 
+interface TopProductItem {
+  id?: string;
+  name?: string;
+  product?: Product;
+  quantity: number;
+  revenue?: number;
+  rank?: number;
+}
+
 interface TopProductsListProps {
-  products: { product: Product; quantity: number }[];
+  products: TopProductItem[];
 }
 
 const rankStyles = [
@@ -33,10 +42,14 @@ export function TopProductsList({ products }: TopProductsListProps) {
       <div className="space-y-3">
         {products.map((item, index) => {
           const barWidth = (item.quantity / maxQuantity) * 100;
+          const productName = item.name || item.product?.name || 'Produto';
+          const productPrice = item.product?.price || (item.revenue ? item.revenue / item.quantity : 0);
+          const productId = item.id || item.product?.id || index.toString();
+          const revenue = item.revenue || (item.product?.price || 0) * item.quantity;
           
           return (
             <div
-              key={item.product.id}
+              key={productId}
               className="group relative flex items-center gap-4 p-3 rounded-xl bg-secondary/30 hover:bg-secondary/60 transition-all duration-200 animate-slide-up"
               style={{ animationDelay: `${index * 80}ms` }}
             >
@@ -45,13 +58,13 @@ export function TopProductsList({ products }: TopProductsListProps) {
                 'w-8 h-8 rounded-lg flex items-center justify-center text-sm font-bold shrink-0',
                 index < 3 ? rankStyles[index] : 'bg-muted text-muted-foreground'
               )}>
-                {index + 1}
+                {item.rank || index + 1}
               </span>
 
               {/* Product info */}
               <div className="flex-1 min-w-0 relative">
                 <div className="flex items-center justify-between mb-1">
-                  <p className="font-semibold truncate pr-4">{item.product.name}</p>
+                  <p className="font-semibold truncate pr-4">{productName}</p>
                   <span className="text-sm font-bold text-primary tabular-nums shrink-0">
                     <AnimatedCounter 
                       value={item.quantity} 
@@ -64,10 +77,10 @@ export function TopProductsList({ products }: TopProductsListProps) {
                 
                 <div className="flex items-center justify-between">
                   <span className="text-sm text-muted-foreground">
-                    R$ {item.product.price.toFixed(2).replace('.', ',')}
+                    R$ {productPrice.toFixed(2).replace('.', ',')}
                   </span>
                   <span className="text-xs text-success font-medium">
-                    R$ {(item.product.price * item.quantity).toFixed(2).replace('.', ',')}
+                    R$ {revenue.toFixed(2).replace('.', ',')}
                   </span>
                 </div>
 

@@ -37,6 +37,9 @@ import {
   NavigationMenuTrigger,
 } from '@/components/ui/navigation-menu';
 import { StoreSelector } from './StoreSelector';
+import { GlobalSearch } from '@/components/GlobalSearch';
+import { NotificationCenter } from '@/components/NotificationCenter';
+import { ThemeSelector } from '@/components/ThemeSelector';
 
 interface AppHeaderProps {
   currentPage: string;
@@ -219,6 +222,9 @@ export function AppHeader({ currentPage, onNavigate }: AppHeaderProps) {
       {/* Spacer */}
       <div className="flex-1" />
 
+      {/* Global Search */}
+      <GlobalSearch onNavigate={onNavigate} />
+
       {/* Store Selector */}
       <div className="hidden lg:block">
         <StoreSelector />
@@ -229,6 +235,12 @@ export function AppHeader({ currentPage, onNavigate }: AppHeaderProps) {
         <Clock className="w-3.5 h-3.5" />
         <span className="tabular-nums">{formatTime(currentTime)}</span>
       </div>
+
+      {/* Notifications */}
+      <NotificationCenter />
+
+      {/* Theme Selector */}
+      <ThemeSelector />
 
       {/* Theme Toggle */}
       <button

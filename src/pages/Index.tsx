@@ -10,17 +10,18 @@ import { StockPage } from '@/components/pos/StockPage';
 import { PromotionsManager } from '@/components/pos/PromotionsManager';
 import { StoresManager } from '@/components/pos/StoresManager';
 import { AuditPage } from '@/components/pos/AuditPage';
-import { mockDashboardStats } from '@/data/mockData';
+import { useDashboardStats } from '@/hooks/useDashboardStats';
 
 const Index = () => {
   const [currentPage, setCurrentPage] = useState('pos');
+  const { stats } = useDashboardStats();
 
   const renderPage = () => {
     switch (currentPage) {
       case 'pos':
         return <POSScreen currentPage={currentPage} onNavigate={setCurrentPage} />;
       case 'dashboard':
-        return <Dashboard stats={mockDashboardStats} />;
+        return <Dashboard stats={stats} />;
       case 'products':
         return <ProductsPage />;
       case 'stock':
