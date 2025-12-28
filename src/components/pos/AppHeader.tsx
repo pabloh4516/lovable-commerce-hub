@@ -12,12 +12,12 @@ import {
   LogOut,
   Clock,
   Building2,
-  FileText,
   Users,
   Settings,
   ClipboardList,
   TrendingUp,
   ChevronDown,
+  Sparkles,
 } from 'lucide-react';
 import { useTheme } from 'next-themes';
 import { useAuth } from '@/hooks/useAuth';
@@ -113,44 +113,55 @@ export function AppHeader({ currentPage, onNavigate }: AppHeaderProps) {
   };
 
   return (
-    <header className="h-16 bg-card border-b border-border flex items-center px-5 gap-3">
+    <header className="h-18 bg-card/95 backdrop-blur-xl border-b border-border/50 flex items-center px-6 gap-4 shadow-sm sticky top-0 z-50">
       {/* Logo */}
-      <div className="flex items-center gap-3 pr-5 border-r border-border">
-        <div className="w-10 h-10 rounded-xl bg-primary flex items-center justify-center shadow-sm">
-          <Store className="w-5 h-5 text-primary-foreground" />
+      <div className="flex items-center gap-3 pr-6 border-r border-border/50">
+        <div className="relative">
+          <div className="w-11 h-11 rounded-2xl bg-gradient-primary flex items-center justify-center shadow-glow">
+            <Store className="w-5 h-5 text-primary-foreground" />
+          </div>
+          <div className="absolute -top-1 -right-1 w-4 h-4 rounded-full bg-success flex items-center justify-center">
+            <Sparkles className="w-2.5 h-2.5 text-success-foreground" />
+          </div>
         </div>
-        <span className="font-semibold text-base hidden lg:block">PDV Express</span>
+        <div className="hidden lg:block">
+          <span className="font-bold text-base">PDV Express</span>
+          <span className="text-xs text-primary font-semibold ml-2 px-2 py-0.5 rounded-full bg-primary/10">Pro</span>
+        </div>
       </div>
 
-      {/* Caixa Button - Highlighted */}
+      {/* Caixa Button - Premium */}
       <button
         onClick={() => onNavigate('pos')}
         className={cn(
-          "flex items-center gap-2.5 px-5 py-2.5 rounded-xl font-medium transition-all duration-200 ml-2",
+          "group relative flex items-center gap-2.5 px-6 py-3 rounded-xl font-semibold transition-all duration-300 ml-2 overflow-hidden",
           currentPage === 'pos'
-            ? "bg-primary text-primary-foreground shadow-md"
-            : "bg-primary/10 text-primary hover:bg-primary hover:text-primary-foreground"
+            ? "bg-gradient-primary text-primary-foreground shadow-glow"
+            : "bg-primary/10 text-primary hover:bg-gradient-primary hover:text-primary-foreground hover:shadow-glow"
         )}
       >
-        <ShoppingCart className="w-5 h-5" />
-        <span className="text-sm">Caixa</span>
+        <ShoppingCart className="w-5 h-5 transition-transform group-hover:scale-110" />
+        <span className="text-sm">Abrir Caixa</span>
+        {currentPage !== 'pos' && (
+          <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/10 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-700" />
+        )}
       </button>
 
       {/* Navigation Sections - Desktop */}
       <NavigationMenu className="hidden md:flex ml-2">
-        <NavigationMenuList className="gap-0">
+        <NavigationMenuList className="gap-1">
           {navigationSections.map((section) => (
             <NavigationMenuItem key={section.id}>
               <NavigationMenuTrigger 
                 className={cn(
-                  "bg-transparent h-10 px-4 text-sm font-medium data-[state=open]:bg-secondary",
-                  isSectionActive(section) && "text-primary"
+                  "bg-transparent h-11 px-4 text-sm font-medium rounded-xl data-[state=open]:bg-muted/50 hover:bg-muted/50 transition-all",
+                  isSectionActive(section) && "text-primary bg-primary/5"
                 )}
               >
                 {section.label}
               </NavigationMenuTrigger>
               <NavigationMenuContent>
-                <div className="w-64 p-2">
+                <div className="w-72 p-3 bg-card/95 backdrop-blur-xl border border-border/50 rounded-2xl shadow-xl">
                   {section.items.map((item) => {
                     const Icon = item.icon;
                     return (
@@ -158,15 +169,20 @@ export function AppHeader({ currentPage, onNavigate }: AppHeaderProps) {
                         key={item.id}
                         onClick={() => onNavigate(item.id)}
                         className={cn(
-                          "w-full flex items-start gap-3 p-3 rounded-lg text-left transition-colors",
+                          "w-full flex items-start gap-4 p-4 rounded-xl text-left transition-all duration-200",
                           isItemActive(item.id)
                             ? "bg-primary/10 text-primary"
-                            : "hover:bg-secondary"
+                            : "hover:bg-muted/50"
                         )}
                       >
-                        <Icon className="w-5 h-5 mt-0.5 shrink-0" />
+                        <div className={cn(
+                          "w-10 h-10 rounded-xl flex items-center justify-center shrink-0",
+                          isItemActive(item.id) ? "bg-primary/20" : "bg-muted"
+                        )}>
+                          <Icon className="w-5 h-5" />
+                        </div>
                         <div className="flex-1 min-w-0">
-                          <div className="font-medium text-sm">{item.label}</div>
+                          <div className="font-semibold text-sm">{item.label}</div>
                           <div className="text-xs text-muted-foreground mt-0.5">
                             {item.description}
                           </div>
@@ -184,15 +200,15 @@ export function AppHeader({ currentPage, onNavigate }: AppHeaderProps) {
       {/* Mobile Menu */}
       <DropdownMenu>
         <DropdownMenuTrigger asChild className="md:hidden">
-          <button className="flex items-center gap-1.5 px-4 py-2.5 rounded-xl text-sm font-medium hover:bg-secondary transition-colors ml-2">
+          <button className="flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-medium hover:bg-muted/50 transition-colors ml-2">
             Menu
             <ChevronDown className="w-4 h-4" />
           </button>
         </DropdownMenuTrigger>
-        <DropdownMenuContent align="start" className="w-56">
+        <DropdownMenuContent align="start" className="w-60 p-2">
           {navigationSections.map((section, sectionIndex) => (
             <div key={section.id}>
-              <div className="px-2 py-1.5 text-xs font-semibold text-muted-foreground uppercase tracking-wider">
+              <div className="px-3 py-2 text-xs font-bold text-muted-foreground uppercase tracking-wider">
                 {section.label}
               </div>
               {section.items.map((item) => {
@@ -202,7 +218,7 @@ export function AppHeader({ currentPage, onNavigate }: AppHeaderProps) {
                     key={item.id}
                     onClick={() => onNavigate(item.id)}
                     className={cn(
-                      "gap-2 cursor-pointer",
+                      "gap-3 cursor-pointer rounded-lg py-3",
                       isItemActive(item.id) && "bg-primary/10 text-primary"
                     )}
                   >
@@ -212,7 +228,7 @@ export function AppHeader({ currentPage, onNavigate }: AppHeaderProps) {
                 );
               })}
               {sectionIndex < navigationSections.length - 1 && (
-                <DropdownMenuSeparator />
+                <DropdownMenuSeparator className="my-2" />
               )}
             </div>
           ))}
@@ -230,10 +246,10 @@ export function AppHeader({ currentPage, onNavigate }: AppHeaderProps) {
         <StoreSelector />
       </div>
 
-      {/* Time */}
-      <div className="hidden sm:flex items-center gap-2 text-sm text-muted-foreground px-2">
-        <Clock className="w-4 h-4" />
-        <span className="tabular-nums font-medium">{formatTime(currentTime)}</span>
+      {/* Time - Premium Style */}
+      <div className="hidden sm:flex items-center gap-2 px-4 py-2 rounded-xl bg-muted/30 border border-border/30">
+        <Clock className="w-4 h-4 text-primary" />
+        <span className="tabular-nums font-bold text-sm">{formatTime(currentTime)}</span>
       </div>
 
       {/* Notifications */}
@@ -245,35 +261,38 @@ export function AppHeader({ currentPage, onNavigate }: AppHeaderProps) {
       {/* Theme Toggle */}
       <button
         onClick={() => setTheme(theme === 'dark' ? 'light' : 'dark')}
-        className="w-10 h-10 rounded-xl flex items-center justify-center hover:bg-secondary transition-colors"
+        className="w-11 h-11 rounded-xl flex items-center justify-center hover:bg-muted/50 transition-all duration-200 border border-border/30"
       >
         {theme === 'dark' ? (
-          <Sun className="w-5 h-5" />
+          <Sun className="w-5 h-5 text-warning" />
         ) : (
           <Moon className="w-5 h-5" />
         )}
       </button>
 
-      {/* User Menu */}
+      {/* User Menu - Premium */}
       <DropdownMenu>
         <DropdownMenuTrigger asChild>
-          <button className="flex items-center gap-3 pl-4 border-l border-border">
-            <div className="w-10 h-10 rounded-xl bg-primary/10 text-primary flex items-center justify-center text-sm font-semibold">
-              {profile?.name ? getInitials(profile.name) : <User className="w-5 h-5" />}
+          <button className="flex items-center gap-4 pl-4 border-l border-border/50 hover:bg-muted/30 rounded-r-xl transition-colors py-2 pr-2">
+            <div className="relative">
+              <div className="w-11 h-11 rounded-xl bg-gradient-to-br from-primary/20 to-primary/5 text-primary flex items-center justify-center text-sm font-bold border border-primary/20">
+                {profile?.name ? getInitials(profile.name) : <User className="w-5 h-5" />}
+              </div>
+              <div className="absolute -bottom-0.5 -right-0.5 w-3.5 h-3.5 rounded-full bg-success border-2 border-card" />
             </div>
             <div className="hidden sm:block text-left">
-              <p className="text-sm font-medium leading-none">{profile?.name || 'Usuário'}</p>
-              <p className="text-xs text-muted-foreground mt-1">{profile?.code || ''}</p>
+              <p className="text-sm font-semibold leading-none">{profile?.name || 'Usuário'}</p>
+              <p className="text-xs text-muted-foreground mt-1.5">{profile?.code || 'Operador'}</p>
             </div>
           </button>
         </DropdownMenuTrigger>
-        <DropdownMenuContent align="end" className="w-48">
-          <DropdownMenuItem onClick={() => onNavigate('settings')} className="gap-2">
+        <DropdownMenuContent align="end" className="w-56 p-2">
+          <DropdownMenuItem onClick={() => onNavigate('settings')} className="gap-3 py-3 rounded-lg cursor-pointer">
             <Settings className="w-4 h-4" />
             Configurações
           </DropdownMenuItem>
-          <DropdownMenuSeparator />
-          <DropdownMenuItem onClick={signOut} className="gap-2 text-destructive focus:text-destructive">
+          <DropdownMenuSeparator className="my-2" />
+          <DropdownMenuItem onClick={signOut} className="gap-3 py-3 rounded-lg cursor-pointer text-destructive focus:text-destructive">
             <LogOut className="w-4 h-4" />
             Sair
           </DropdownMenuItem>
