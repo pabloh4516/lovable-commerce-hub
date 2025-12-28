@@ -6,7 +6,6 @@ import {
   Package,
   Boxes,
   Tags,
-  MoreHorizontal,
   User,
   Moon,
   Sun,
@@ -16,7 +15,9 @@ import {
   FileText,
   Users,
   Settings,
-  ClipboardList
+  ClipboardList,
+  TrendingUp,
+  ChevronDown,
 } from 'lucide-react';
 import { useTheme } from 'next-themes';
 import { useAuth } from '@/hooks/useAuth';
@@ -28,6 +29,13 @@ import {
   DropdownMenuTrigger,
   DropdownMenuSeparator,
 } from '@/components/ui/dropdown-menu';
+import {
+  NavigationMenu,
+  NavigationMenuContent,
+  NavigationMenuItem,
+  NavigationMenuList,
+  NavigationMenuTrigger,
+} from '@/components/ui/navigation-menu';
 import { StoreSelector } from './StoreSelector';
 
 interface AppHeaderProps {
@@ -35,20 +43,46 @@ interface AppHeaderProps {
   onNavigate: (page: string) => void;
 }
 
-const mainTabs = [
-  { id: 'pos', label: 'Caixa', icon: ShoppingCart },
-  { id: 'dashboard', label: 'Dashboard', icon: LayoutDashboard },
-  { id: 'products', label: 'Produtos', icon: Package },
-  { id: 'stock', label: 'Estoque', icon: Boxes },
-  { id: 'promotions', label: 'Promoções', icon: Tags },
-];
-
-const moreTabs = [
-  { id: 'stores', label: 'Lojas', icon: Building2 },
-  { id: 'reports', label: 'Relatórios', icon: FileText },
-  { id: 'audit', label: 'Auditoria', icon: ClipboardList },
-  { id: 'users', label: 'Usuários', icon: Users },
-  { id: 'settings', label: 'Configurações', icon: Settings },
+const navigationSections = [
+  {
+    id: 'vendas',
+    label: 'Vendas',
+    items: [
+      { id: 'dashboard', label: 'Dashboard', description: 'Visão geral do dia', icon: LayoutDashboard },
+    ]
+  },
+  {
+    id: 'catalogo',
+    label: 'Catálogo',
+    items: [
+      { id: 'products', label: 'Produtos', description: 'Gerenciar produtos', icon: Package },
+      { id: 'promotions', label: 'Promoções', description: 'Ofertas e descontos', icon: Tags },
+    ]
+  },
+  {
+    id: 'gestao',
+    label: 'Gestão',
+    items: [
+      { id: 'stock', label: 'Estoque', description: 'Status e movimentações', icon: Boxes },
+    ]
+  },
+  {
+    id: 'relatorios',
+    label: 'Relatórios',
+    items: [
+      { id: 'reports', label: 'Vendas', description: 'Relatório de vendas', icon: TrendingUp },
+      { id: 'audit', label: 'Auditoria', description: 'Log de ações', icon: ClipboardList },
+    ]
+  },
+  {
+    id: 'admin',
+    label: 'Admin',
+    items: [
+      { id: 'stores', label: 'Lojas', description: 'Gerenciar lojas', icon: Building2 },
+      { id: 'users', label: 'Usuários', description: 'Gerenciar equipe', icon: Users },
+      { id: 'settings', label: 'Configurações', description: 'Sistema', icon: Settings },
+    ]
+  },
 ];
 
 export function AppHeader({ currentPage, onNavigate }: AppHeaderProps) {
@@ -69,68 +103,118 @@ export function AppHeader({ currentPage, onNavigate }: AppHeaderProps) {
     return name.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2);
   };
 
-  const isMoreActive = moreTabs.some(tab => tab.id === currentPage);
+  const isItemActive = (itemId: string) => currentPage === itemId;
+
+  const isSectionActive = (section: typeof navigationSections[0]) => {
+    return section.items.some(item => item.id === currentPage);
+  };
 
   return (
-    <header className="h-14 bg-card border-b border-border flex items-center px-4 gap-6">
+    <header className="h-14 bg-card border-b border-border flex items-center px-4 gap-2">
       {/* Logo */}
       <div className="flex items-center gap-2.5 pr-4 border-r border-border">
         <div className="w-8 h-8 rounded-lg bg-primary flex items-center justify-center">
           <Store className="w-4 h-4 text-primary-foreground" />
         </div>
-        <span className="font-semibold text-sm hidden sm:block">PDV Express</span>
+        <span className="font-semibold text-sm hidden lg:block">PDV Express</span>
       </div>
 
-      {/* Main Tabs */}
-      <nav className="flex items-center gap-1">
-        {mainTabs.map((tab) => (
-          <button
-            key={tab.id}
-            onClick={() => onNavigate(tab.id)}
-            className={cn(
-              "flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-medium transition-colors",
-              currentPage === tab.id
-                ? "bg-primary text-primary-foreground"
-                : "text-muted-foreground hover:text-foreground hover:bg-secondary"
-            )}
-          >
-            <tab.icon className="w-4 h-4" />
-            <span className="hidden md:block">{tab.label}</span>
-          </button>
-        ))}
+      {/* Caixa Button - Highlighted */}
+      <button
+        onClick={() => onNavigate('pos')}
+        className={cn(
+          "flex items-center gap-2 px-4 py-2 rounded-lg font-medium transition-all duration-200 ml-2",
+          currentPage === 'pos'
+            ? "bg-primary text-primary-foreground shadow-md"
+            : "bg-primary/10 text-primary hover:bg-primary hover:text-primary-foreground"
+        )}
+      >
+        <ShoppingCart className="w-4 h-4" />
+        <span>Caixa</span>
+      </button>
 
-        {/* More Dropdown */}
-        <DropdownMenu>
-          <DropdownMenuTrigger asChild>
-            <button
-              className={cn(
-                "flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-medium transition-colors",
-                isMoreActive
-                  ? "bg-primary text-primary-foreground"
-                  : "text-muted-foreground hover:text-foreground hover:bg-secondary"
-              )}
-            >
-              <MoreHorizontal className="w-4 h-4" />
-              <span className="hidden md:block">Mais</span>
-            </button>
-          </DropdownMenuTrigger>
-          <DropdownMenuContent align="start" className="w-48">
-            {moreTabs.map((tab) => (
-              <DropdownMenuItem 
-                key={tab.id} 
-                onClick={() => onNavigate(tab.id)}
+      {/* Navigation Sections - Desktop */}
+      <NavigationMenu className="hidden md:flex ml-2">
+        <NavigationMenuList className="gap-0">
+          {navigationSections.map((section) => (
+            <NavigationMenuItem key={section.id}>
+              <NavigationMenuTrigger 
                 className={cn(
-                  "gap-2",
-                  currentPage === tab.id && "bg-secondary"
+                  "bg-transparent h-9 px-3 text-sm font-medium data-[state=open]:bg-secondary",
+                  isSectionActive(section) && "text-primary"
                 )}
               >
-                <tab.icon className="w-4 h-4" />
-                {tab.label}
-              </DropdownMenuItem>
-            ))}
-          </DropdownMenuContent>
-        </DropdownMenu>
-      </nav>
+                {section.label}
+              </NavigationMenuTrigger>
+              <NavigationMenuContent>
+                <div className="w-64 p-2">
+                  {section.items.map((item) => {
+                    const Icon = item.icon;
+                    return (
+                      <button
+                        key={item.id}
+                        onClick={() => onNavigate(item.id)}
+                        className={cn(
+                          "w-full flex items-start gap-3 p-3 rounded-lg text-left transition-colors",
+                          isItemActive(item.id)
+                            ? "bg-primary/10 text-primary"
+                            : "hover:bg-secondary"
+                        )}
+                      >
+                        <Icon className="w-5 h-5 mt-0.5 shrink-0" />
+                        <div className="flex-1 min-w-0">
+                          <div className="font-medium text-sm">{item.label}</div>
+                          <div className="text-xs text-muted-foreground mt-0.5">
+                            {item.description}
+                          </div>
+                        </div>
+                      </button>
+                    );
+                  })}
+                </div>
+              </NavigationMenuContent>
+            </NavigationMenuItem>
+          ))}
+        </NavigationMenuList>
+      </NavigationMenu>
+
+      {/* Mobile Menu */}
+      <DropdownMenu>
+        <DropdownMenuTrigger asChild className="md:hidden">
+          <button className="flex items-center gap-1 px-3 py-2 rounded-lg text-sm font-medium hover:bg-secondary transition-colors ml-2">
+            Menu
+            <ChevronDown className="w-4 h-4" />
+          </button>
+        </DropdownMenuTrigger>
+        <DropdownMenuContent align="start" className="w-56">
+          {navigationSections.map((section, sectionIndex) => (
+            <div key={section.id}>
+              <div className="px-2 py-1.5 text-xs font-semibold text-muted-foreground uppercase tracking-wider">
+                {section.label}
+              </div>
+              {section.items.map((item) => {
+                const Icon = item.icon;
+                return (
+                  <DropdownMenuItem
+                    key={item.id}
+                    onClick={() => onNavigate(item.id)}
+                    className={cn(
+                      "gap-2 cursor-pointer",
+                      isItemActive(item.id) && "bg-primary/10 text-primary"
+                    )}
+                  >
+                    <Icon className="w-4 h-4" />
+                    {item.label}
+                  </DropdownMenuItem>
+                );
+              })}
+              {sectionIndex < navigationSections.length - 1 && (
+                <DropdownMenuSeparator />
+              )}
+            </div>
+          ))}
+        </DropdownMenuContent>
+      </DropdownMenu>
 
       {/* Spacer */}
       <div className="flex-1" />
