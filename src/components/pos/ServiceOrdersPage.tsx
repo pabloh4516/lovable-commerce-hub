@@ -6,13 +6,19 @@ import {
   Clock,
   CheckCircle,
   AlertCircle,
-  Phone,
   User,
   Package,
   Loader2,
-  Eye,
   Edit,
-  MessageCircle
+  MessageCircle,
+  Printer,
+  Save,
+  FileText,
+  Camera,
+  Phone,
+  ChevronRight,
+  XCircle,
+  Settings
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -34,10 +40,15 @@ import {
 } from '@/components/ui/select';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
+import { Checkbox } from '@/components/ui/checkbox';
+import { ScrollArea } from '@/components/ui/scroll-area';
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { useServiceOrders, useServiceOrderMutations, ServiceOrderStatus } from '@/hooks/useServiceOrders';
 import { useCustomers } from '@/hooks/useCustomers';
+import { formatCurrency } from '@/lib/utils';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
+import { toast } from 'sonner';
 
 const statusConfig: Record<ServiceOrderStatus, { label: string; color: string; icon: any }> = {
   received: { label: 'Recebido', color: 'bg-blue-500', icon: Package },
@@ -47,7 +58,7 @@ const statusConfig: Record<ServiceOrderStatus, { label: string; color: string; i
   waiting_parts: { label: 'Aguard. Peças', color: 'bg-orange-500', icon: AlertCircle },
   completed: { label: 'Concluído', color: 'bg-success', icon: CheckCircle },
   delivered: { label: 'Entregue', color: 'bg-muted', icon: CheckCircle },
-  cancelled: { label: 'Cancelado', color: 'bg-destructive', icon: AlertCircle },
+  cancelled: { label: 'Cancelado', color: 'bg-destructive', icon: XCircle },
 };
 
 const priorityConfig: Record<string, { label: string; color: string }> = {
@@ -56,6 +67,28 @@ const priorityConfig: Record<string, { label: string; color: string }> = {
   high: { label: 'Alta', color: 'bg-orange-500' },
   urgent: { label: 'Urgente', color: 'bg-destructive' },
 };
+
+const defaultAccessories = [
+  'Carregador',
+  'Cabo USB',
+  'Fone de Ouvido',
+  'Case/Capa',
+  'Película',
+  'Cartão de Memória',
+  'Chip',
+  'Bateria Extra',
+];
+
+const defaultChecklist = [
+  'Liga normalmente',
+  'Tela funcional',
+  'Touch funcional',
+  'Áudio funcional',
+  'Microfone funcional',
+  'Câmera funcional',
+  'Botões funcionais',
+  'Conectividade OK',
+];
 
 export function ServiceOrdersPage() {
   const { data: serviceOrders, isLoading } = useServiceOrders();
@@ -66,6 +99,9 @@ export function ServiceOrdersPage() {
   const [statusFilter, setStatusFilter] = useState<string>('all');
   const [showModal, setShowModal] = useState(false);
   const [selectedOrder, setSelectedOrder] = useState<any>(null);
+  const [accessories, setAccessories] = useState<string[]>([]);
+  const [checklist, setChecklist] = useState<Record<string, boolean>>({});
+  const [activeTab, setActiveTab] = useState('info');
   
   const [formData, setFormData] = useState({
     customer_id: '',
@@ -74,13 +110,19 @@ export function ServiceOrdersPage() {
     equipment_model: '',
     equipment_serial: '',
     equipment_color: '',
-    equipment_accessories: '',
     equipment_condition: '',
     defect_reported: '',
+    defect_found: '',
+    solution: '',
+    technical_report: '',
+    internal_notes: '',
+    customer_notes: '',
     priority: 'normal',
     estimated_value: '',
+    final_value: '',
+    parts_value: '',
+    labor_value: '',
     estimated_date: '',
-    customer_notes: '',
   });
 
   const filteredOrders = serviceOrders?.filter(order => {
@@ -109,15 +151,24 @@ export function ServiceOrdersPage() {
       equipment_model: '',
       equipment_serial: '',
       equipment_color: '',
-      equipment_accessories: '',
       equipment_condition: '',
       defect_reported: '',
+      defect_found: '',
+      solution: '',
+      technical_report: '',
+      internal_notes: '',
+      customer_notes: '',
       priority: 'normal',
       estimated_value: '',
+      final_value: '',
+      parts_value: '',
+      labor_value: '',
       estimated_date: '',
-      customer_notes: '',
     });
+    setAccessories([]);
+    setChecklist({});
     setSelectedOrder(null);
+    setActiveTab('info');
   };
 
   const handleOpenModal = (order?: any) => {
@@ -130,14 +181,22 @@ export function ServiceOrdersPage() {
         equipment_model: order.equipment_model || '',
         equipment_serial: order.equipment_serial || '',
         equipment_color: order.equipment_color || '',
-        equipment_accessories: order.equipment_accessories || '',
         equipment_condition: order.equipment_condition || '',
         defect_reported: order.defect_reported,
+        defect_found: order.defect_found || '',
+        solution: order.solution || '',
+        technical_report: order.technical_report || '',
+        internal_notes: order.internal_notes || '',
+        customer_notes: order.customer_notes || '',
         priority: order.priority,
         estimated_value: order.estimated_value?.toString() || '',
+        final_value: order.final_value?.toString() || '',
+        parts_value: order.parts_value?.toString() || '',
+        labor_value: order.labor_value?.toString() || '',
         estimated_date: order.estimated_date || '',
-        customer_notes: order.customer_notes || '',
       });
+      setAccessories(order.equipment_accessories?.split(',').map((a: string) => a.trim()) || []);
+      setChecklist(order.checklist || {});
     } else {
       resetForm();
     }
@@ -145,7 +204,10 @@ export function ServiceOrdersPage() {
   };
 
   const handleSave = async () => {
-    if (!formData.customer_id || !formData.equipment_type || !formData.defect_reported) return;
+    if (!formData.customer_id || !formData.equipment_type || !formData.defect_reported) {
+      toast.error('Preencha os campos obrigatórios');
+      return;
+    }
 
     const orderData = {
       customer_id: formData.customer_id,
@@ -154,40 +216,45 @@ export function ServiceOrdersPage() {
       equipment_model: formData.equipment_model || null,
       equipment_serial: formData.equipment_serial || null,
       equipment_color: formData.equipment_color || null,
-      equipment_accessories: formData.equipment_accessories || null,
+      equipment_accessories: accessories.join(', ') || null,
       equipment_condition: formData.equipment_condition || null,
       defect_reported: formData.defect_reported,
+      defect_found: formData.defect_found || null,
+      solution: formData.solution || null,
+      technical_report: formData.technical_report || null,
+      internal_notes: formData.internal_notes || null,
+      customer_notes: formData.customer_notes || null,
       priority: formData.priority,
       estimated_value: formData.estimated_value ? parseFloat(formData.estimated_value) : null,
+      final_value: formData.final_value ? parseFloat(formData.final_value) : null,
+      parts_value: formData.parts_value ? parseFloat(formData.parts_value) : 0,
+      labor_value: formData.labor_value ? parseFloat(formData.labor_value) : 0,
       estimated_date: formData.estimated_date || null,
-      customer_notes: formData.customer_notes || null,
+      checklist: Object.keys(checklist).length > 0 ? checklist : null,
       status: 'received' as ServiceOrderStatus,
       store_id: null,
       technician_id: null,
       receptionist_id: '',
-      defect_found: null,
-      solution: null,
-      technical_report: null,
-      final_value: null,
-      parts_value: 0,
-      labor_value: 0,
       discount: 0,
       warranty_until: null,
       completed_date: null,
       delivered_date: null,
-      internal_notes: null,
-      checklist: null,
       images: null,
     };
 
-    if (selectedOrder) {
-      await updateServiceOrder.mutateAsync({ id: selectedOrder.id, ...orderData });
-    } else {
-      await createServiceOrder.mutateAsync(orderData);
+    try {
+      if (selectedOrder) {
+        await updateServiceOrder.mutateAsync({ id: selectedOrder.id, ...orderData });
+        toast.success('OS atualizada!');
+      } else {
+        await createServiceOrder.mutateAsync(orderData);
+        toast.success('OS criada!');
+      }
+      setShowModal(false);
+      resetForm();
+    } catch (error) {
+      toast.error('Erro ao salvar OS');
     }
-
-    setShowModal(false);
-    resetForm();
   };
 
   const handleStatusChange = async (orderId: string, newStatus: ServiceOrderStatus) => {
@@ -197,6 +264,25 @@ export function ServiceOrdersPage() {
   const sendWhatsApp = (phone: string, orderNumber: number) => {
     const message = encodeURIComponent(`Olá! Sua ordem de serviço #${orderNumber} está pronta para retirada.`);
     window.open(`https://wa.me/55${phone?.replace(/\D/g, '')}?text=${message}`, '_blank');
+  };
+
+  const printOS = (order: any) => {
+    toast.success(`Imprimindo OS #${order.number}`);
+  };
+
+  const toggleAccessory = (accessory: string) => {
+    setAccessories(prev => 
+      prev.includes(accessory) 
+        ? prev.filter(a => a !== accessory)
+        : [...prev, accessory]
+    );
+  };
+
+  const toggleChecklistItem = (item: string) => {
+    setChecklist(prev => ({
+      ...prev,
+      [item]: !prev[item]
+    }));
   };
 
   if (isLoading) {
@@ -209,25 +295,61 @@ export function ServiceOrdersPage() {
 
   return (
     <div className="p-6 space-y-6">
+      {/* Shortcut Bar */}
+      <div className="flex items-center gap-2 p-2 bg-muted/50 rounded-lg overflow-x-auto">
+        <Button onClick={() => handleOpenModal()} size="sm" className="gap-1">
+          <Plus className="w-4 h-4" />
+          Nova OS <kbd className="ml-1 text-xs opacity-70">F2</kbd>
+        </Button>
+        <Button variant="outline" size="sm" disabled={!selectedOrder} className="gap-1">
+          <Save className="w-4 h-4" />
+          Salvar <kbd className="ml-1 text-xs opacity-70">F4</kbd>
+        </Button>
+        <Button variant="outline" size="sm" disabled={!selectedOrder} className="gap-1">
+          <Edit className="w-4 h-4" />
+          Alterar <kbd className="ml-1 text-xs opacity-70">F5</kbd>
+        </Button>
+        <Button variant="outline" size="sm" className="gap-1">
+          <Search className="w-4 h-4" />
+          Localizar <kbd className="ml-1 text-xs opacity-70">F9</kbd>
+        </Button>
+        <div className="flex-1" />
+        <Button variant="outline" size="sm" disabled={!selectedOrder} className="gap-1" onClick={() => selectedOrder && printOS(selectedOrder)}>
+          <Printer className="w-4 h-4" />
+          Cupom 80mm <kbd className="ml-1 text-xs opacity-70">F7</kbd>
+        </Button>
+        <Button variant="outline" size="sm" disabled={!selectedOrder} className="gap-1">
+          <Printer className="w-4 h-4" />
+          Cupom 58mm <kbd className="ml-1 text-xs opacity-70">F8</kbd>
+        </Button>
+        <Button variant="outline" size="sm" disabled={!selectedOrder} className="gap-1">
+          <Camera className="w-4 h-4" />
+          Foto
+        </Button>
+        <Button variant="outline" size="sm" disabled={!selectedOrder} className="gap-1">
+          <MessageCircle className="w-4 h-4 text-green-500" />
+          WhatsApp
+        </Button>
+      </div>
+
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-bold text-foreground">Ordens de Serviço</h1>
+          <h1 className="text-2xl font-bold text-foreground flex items-center gap-2">
+            <Wrench className="h-7 w-7 text-primary" />
+            Ordens de Serviço
+          </h1>
           <p className="text-muted-foreground">Gerencie suas ordens de serviço</p>
         </div>
-        <Button onClick={() => handleOpenModal()} className="gap-2">
-          <Plus className="w-4 h-4" />
-          Nova OS
-        </Button>
       </div>
 
       {/* Stats */}
       <div className="grid grid-cols-4 gap-4">
-        <Card>
+        <Card className="stat-card">
           <CardContent className="p-4">
             <div className="flex items-center gap-3">
-              <div className="p-2 rounded-lg bg-primary/10">
-                <Wrench className="w-5 h-5 text-primary" />
+              <div className="icon-box">
+                <Wrench className="w-5 h-5" />
               </div>
               <div>
                 <p className="text-2xl font-bold">{stats.total}</p>
@@ -236,11 +358,11 @@ export function ServiceOrdersPage() {
             </div>
           </CardContent>
         </Card>
-        <Card>
+        <Card className="stat-card">
           <CardContent className="p-4">
             <div className="flex items-center gap-3">
-              <div className="p-2 rounded-lg bg-yellow-500/10">
-                <Clock className="w-5 h-5 text-yellow-500" />
+              <div className="icon-box-warning">
+                <Clock className="w-5 h-5" />
               </div>
               <div>
                 <p className="text-2xl font-bold">{stats.pending}</p>
@@ -249,10 +371,10 @@ export function ServiceOrdersPage() {
             </div>
           </CardContent>
         </Card>
-        <Card>
+        <Card className="stat-card">
           <CardContent className="p-4">
             <div className="flex items-center gap-3">
-              <div className="p-2 rounded-lg bg-blue-500/10">
+              <div className="p-2 rounded-xl bg-blue-500/10">
                 <Wrench className="w-5 h-5 text-blue-500" />
               </div>
               <div>
@@ -262,11 +384,11 @@ export function ServiceOrdersPage() {
             </div>
           </CardContent>
         </Card>
-        <Card>
+        <Card className="stat-card">
           <CardContent className="p-4">
             <div className="flex items-center gap-3">
-              <div className="p-2 rounded-lg bg-success/10">
-                <CheckCircle className="w-5 h-5 text-success" />
+              <div className="icon-box-success">
+                <CheckCircle className="w-5 h-5" />
               </div>
               <div>
                 <p className="text-2xl font-bold">{stats.completed}</p>
@@ -319,7 +441,11 @@ export function ServiceOrdersPage() {
             const priority = priorityConfig[order.priority];
             
             return (
-              <Card key={order.id} className="hover:shadow-md transition-shadow">
+              <Card 
+                key={order.id} 
+                className={`hover:shadow-md transition-shadow cursor-pointer ${selectedOrder?.id === order.id ? 'ring-2 ring-primary' : ''}`}
+                onClick={() => setSelectedOrder(order)}
+              >
                 <CardContent className="p-4">
                   <div className="flex items-start justify-between">
                     <div className="flex gap-4">
@@ -353,7 +479,7 @@ export function ServiceOrdersPage() {
                         </p>
                         {order.estimated_value && (
                           <p className="mt-1 text-sm font-medium text-primary">
-                            Valor estimado: R$ {order.estimated_value.toFixed(2)}
+                            Valor estimado: {formatCurrency(order.estimated_value)}
                           </p>
                         )}
                       </div>
@@ -367,7 +493,7 @@ export function ServiceOrdersPage() {
                           <Button
                             variant="ghost"
                             size="icon"
-                            onClick={() => sendWhatsApp(order.customer.phone!, order.number)}
+                            onClick={(e) => { e.stopPropagation(); sendWhatsApp(order.customer.phone!, order.number); }}
                           >
                             <MessageCircle className="w-4 h-4 text-green-500" />
                           </Button>
@@ -375,16 +501,23 @@ export function ServiceOrdersPage() {
                         <Button
                           variant="ghost"
                           size="icon"
-                          onClick={() => handleOpenModal(order)}
+                          onClick={(e) => { e.stopPropagation(); handleOpenModal(order); }}
                         >
                           <Edit className="w-4 h-4" />
+                        </Button>
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          onClick={(e) => { e.stopPropagation(); printOS(order); }}
+                        >
+                          <Printer className="w-4 h-4" />
                         </Button>
                       </div>
                       <Select
                         value={order.status}
                         onValueChange={(value) => handleStatusChange(order.id, value as ServiceOrderStatus)}
                       >
-                        <SelectTrigger className="w-[160px] h-8 text-xs">
+                        <SelectTrigger className="w-[160px] h-8 text-xs" onClick={(e) => e.stopPropagation()}>
                           <SelectValue />
                         </SelectTrigger>
                         <SelectContent>
@@ -402,170 +535,307 @@ export function ServiceOrdersPage() {
         )}
       </div>
 
-      {/* Modal */}
+      {/* Full Edit Modal */}
       <Dialog open={showModal} onOpenChange={setShowModal}>
-        <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+        <DialogContent className="max-w-5xl max-h-[95vh] overflow-hidden flex flex-col">
           <DialogHeader>
-            <DialogTitle>
+            <DialogTitle className="flex items-center gap-2">
+              <Wrench className="w-5 h-5 text-primary" />
               {selectedOrder ? `Editar OS #${selectedOrder.number}` : 'Nova Ordem de Serviço'}
             </DialogTitle>
           </DialogHeader>
 
-          <div className="grid gap-6 py-4">
-            {/* Cliente */}
-            <div>
-              <Label>Cliente *</Label>
-              <Select
-                value={formData.customer_id}
-                onValueChange={(value) => setFormData({ ...formData, customer_id: value })}
-              >
-                <SelectTrigger>
-                  <SelectValue placeholder="Selecione o cliente" />
-                </SelectTrigger>
-                <SelectContent>
-                  {customers?.map((customer) => (
-                    <SelectItem key={customer.id} value={customer.id}>
-                      {customer.name}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
+          <div className="flex-1 overflow-hidden">
+            <div className="grid grid-cols-4 gap-6 h-full">
+              {/* Main Content */}
+              <div className="col-span-3 space-y-4 overflow-y-auto pr-4">
+                {/* Customer & Equipment Row */}
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <Label>Cliente *</Label>
+                    <Select
+                      value={formData.customer_id}
+                      onValueChange={(value) => setFormData({ ...formData, customer_id: value })}
+                    >
+                      <SelectTrigger>
+                        <SelectValue placeholder="Selecione o cliente" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {customers?.map((customer) => (
+                          <SelectItem key={customer.id} value={customer.id}>
+                            {customer.name}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <div className="grid grid-cols-2 gap-2">
+                    <div>
+                      <Label>Status</Label>
+                      <Select defaultValue="received">
+                        <SelectTrigger>
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {Object.entries(statusConfig).map(([key, config]) => (
+                            <SelectItem key={key} value={key}>{config.label}</SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </div>
+                    <div>
+                      <Label>Prioridade</Label>
+                      <Select value={formData.priority} onValueChange={(v) => setFormData({ ...formData, priority: v })}>
+                        <SelectTrigger>
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {Object.entries(priorityConfig).map(([key, config]) => (
+                            <SelectItem key={key} value={key}>{config.label}</SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </div>
+                  </div>
+                </div>
 
-            {/* Equipamento */}
-            <div className="space-y-4">
-              <h3 className="font-semibold">Dados do Equipamento</h3>
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <Label>Tipo de Equipamento *</Label>
-                  <Input
-                    value={formData.equipment_type}
-                    onChange={(e) => setFormData({ ...formData, equipment_type: e.target.value })}
-                    placeholder="Ex: Notebook, Celular, Impressora"
-                  />
-                </div>
-                <div>
-                  <Label>Marca</Label>
-                  <Input
-                    value={formData.equipment_brand}
-                    onChange={(e) => setFormData({ ...formData, equipment_brand: e.target.value })}
-                  />
-                </div>
-              </div>
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <Label>Modelo</Label>
-                  <Input
-                    value={formData.equipment_model}
-                    onChange={(e) => setFormData({ ...formData, equipment_model: e.target.value })}
-                  />
-                </div>
-                <div>
-                  <Label>Número de Série</Label>
-                  <Input
-                    value={formData.equipment_serial}
-                    onChange={(e) => setFormData({ ...formData, equipment_serial: e.target.value })}
-                  />
-                </div>
-              </div>
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <Label>Cor</Label>
-                  <Input
-                    value={formData.equipment_color}
-                    onChange={(e) => setFormData({ ...formData, equipment_color: e.target.value })}
-                  />
-                </div>
-                <div>
-                  <Label>Acessórios</Label>
-                  <Input
-                    value={formData.equipment_accessories}
-                    onChange={(e) => setFormData({ ...formData, equipment_accessories: e.target.value })}
-                    placeholder="Carregador, case, etc."
-                  />
-                </div>
-              </div>
-              <div>
-                <Label>Condição do Equipamento</Label>
-                <Textarea
-                  value={formData.equipment_condition}
-                  onChange={(e) => setFormData({ ...formData, equipment_condition: e.target.value })}
-                  placeholder="Descreva a condição física do equipamento"
-                  rows={2}
-                />
-              </div>
-            </div>
+                {/* Equipment */}
+                <Card>
+                  <CardHeader className="py-3">
+                    <CardTitle className="text-sm flex items-center gap-2">
+                      <Package className="w-4 h-4" />
+                      Dados do Equipamento
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent className="space-y-3">
+                    <div className="grid grid-cols-4 gap-3">
+                      <div>
+                        <Label>Tipo *</Label>
+                        <Input
+                          value={formData.equipment_type}
+                          onChange={(e) => setFormData({ ...formData, equipment_type: e.target.value })}
+                          placeholder="Celular, Notebook..."
+                        />
+                      </div>
+                      <div>
+                        <Label>Marca</Label>
+                        <Input
+                          value={formData.equipment_brand}
+                          onChange={(e) => setFormData({ ...formData, equipment_brand: e.target.value })}
+                        />
+                      </div>
+                      <div>
+                        <Label>Modelo</Label>
+                        <Input
+                          value={formData.equipment_model}
+                          onChange={(e) => setFormData({ ...formData, equipment_model: e.target.value })}
+                        />
+                      </div>
+                      <div>
+                        <Label>Cor</Label>
+                        <Input
+                          value={formData.equipment_color}
+                          onChange={(e) => setFormData({ ...formData, equipment_color: e.target.value })}
+                        />
+                      </div>
+                    </div>
+                    <div className="grid grid-cols-2 gap-3">
+                      <div>
+                        <Label>Número de Série / IMEI</Label>
+                        <Input
+                          value={formData.equipment_serial}
+                          onChange={(e) => setFormData({ ...formData, equipment_serial: e.target.value })}
+                        />
+                      </div>
+                      <div>
+                        <Label>Condição</Label>
+                        <Input
+                          value={formData.equipment_condition}
+                          onChange={(e) => setFormData({ ...formData, equipment_condition: e.target.value })}
+                          placeholder="Bom estado, arranhões..."
+                        />
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
 
-            {/* Defeito */}
-            <div>
-              <Label>Defeito Relatado *</Label>
-              <Textarea
-                value={formData.defect_reported}
-                onChange={(e) => setFormData({ ...formData, defect_reported: e.target.value })}
-                placeholder="Descreva o problema relatado pelo cliente"
-                rows={3}
-              />
-            </div>
+                {/* Problem / Report / Notes */}
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <Label>Problema Relatado *</Label>
+                    <Textarea
+                      value={formData.defect_reported}
+                      onChange={(e) => setFormData({ ...formData, defect_reported: e.target.value })}
+                      placeholder="Descreva o problema informado pelo cliente..."
+                      className="h-24"
+                    />
+                  </div>
+                  <div>
+                    <Label>Defeito Encontrado</Label>
+                    <Textarea
+                      value={formData.defect_found}
+                      onChange={(e) => setFormData({ ...formData, defect_found: e.target.value })}
+                      placeholder="Descreva o defeito encontrado..."
+                      className="h-24"
+                    />
+                  </div>
+                </div>
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <Label>Laudo Técnico</Label>
+                    <Textarea
+                      value={formData.technical_report}
+                      onChange={(e) => setFormData({ ...formData, technical_report: e.target.value })}
+                      placeholder="Laudo técnico..."
+                      className="h-24"
+                    />
+                  </div>
+                  <div>
+                    <Label>Solução</Label>
+                    <Textarea
+                      value={formData.solution}
+                      onChange={(e) => setFormData({ ...formData, solution: e.target.value })}
+                      placeholder="Solução aplicada..."
+                      className="h-24"
+                    />
+                  </div>
+                </div>
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <Label>Observações do Cliente</Label>
+                    <Textarea
+                      value={formData.customer_notes}
+                      onChange={(e) => setFormData({ ...formData, customer_notes: e.target.value })}
+                      className="h-20"
+                    />
+                  </div>
+                  <div>
+                    <Label>Observações Internas</Label>
+                    <Textarea
+                      value={formData.internal_notes}
+                      onChange={(e) => setFormData({ ...formData, internal_notes: e.target.value })}
+                      className="h-20"
+                    />
+                  </div>
+                </div>
 
-            {/* Prioridade e valores */}
-            <div className="grid grid-cols-3 gap-4">
-              <div>
-                <Label>Prioridade</Label>
-                <Select
-                  value={formData.priority}
-                  onValueChange={(value) => setFormData({ ...formData, priority: value })}
-                >
-                  <SelectTrigger>
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {Object.entries(priorityConfig).map(([key, config]) => (
-                      <SelectItem key={key} value={key}>{config.label}</SelectItem>
+                {/* Values */}
+                <Card>
+                  <CardHeader className="py-3">
+                    <CardTitle className="text-sm">Valores</CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="grid grid-cols-4 gap-3">
+                      <div>
+                        <Label>Valor Estimado</Label>
+                        <Input
+                          type="number"
+                          value={formData.estimated_value}
+                          onChange={(e) => setFormData({ ...formData, estimated_value: e.target.value })}
+                        />
+                      </div>
+                      <div>
+                        <Label>Peças (R$)</Label>
+                        <Input
+                          type="number"
+                          value={formData.parts_value}
+                          onChange={(e) => setFormData({ ...formData, parts_value: e.target.value })}
+                        />
+                      </div>
+                      <div>
+                        <Label>Mão de Obra (R$)</Label>
+                        <Input
+                          type="number"
+                          value={formData.labor_value}
+                          onChange={(e) => setFormData({ ...formData, labor_value: e.target.value })}
+                        />
+                      </div>
+                      <div>
+                        <Label>Valor Final</Label>
+                        <Input
+                          type="number"
+                          value={formData.final_value}
+                          onChange={(e) => setFormData({ ...formData, final_value: e.target.value })}
+                        />
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+              </div>
+
+              {/* Side Panel */}
+              <div className="space-y-4 overflow-y-auto">
+                {/* Accessories */}
+                <Card>
+                  <CardHeader className="py-3">
+                    <CardTitle className="text-sm">Acessórios</CardTitle>
+                  </CardHeader>
+                  <CardContent className="space-y-2">
+                    {defaultAccessories.map(acc => (
+                      <div key={acc} className="flex items-center gap-2">
+                        <Checkbox
+                          checked={accessories.includes(acc)}
+                          onCheckedChange={() => toggleAccessory(acc)}
+                        />
+                        <span className="text-sm">{acc}</span>
+                      </div>
                     ))}
-                  </SelectContent>
-                </Select>
-              </div>
-              <div>
-                <Label>Valor Estimado</Label>
-                <Input
-                  type="number"
-                  step="0.01"
-                  value={formData.estimated_value}
-                  onChange={(e) => setFormData({ ...formData, estimated_value: e.target.value })}
-                  placeholder="R$ 0,00"
-                />
-              </div>
-              <div>
-                <Label>Previsão de Entrega</Label>
-                <Input
-                  type="date"
-                  value={formData.estimated_date}
-                  onChange={(e) => setFormData({ ...formData, estimated_date: e.target.value })}
-                />
-              </div>
-            </div>
+                  </CardContent>
+                </Card>
 
-            {/* Observações */}
-            <div>
-              <Label>Observações para o Cliente</Label>
-              <Textarea
-                value={formData.customer_notes}
-                onChange={(e) => setFormData({ ...formData, customer_notes: e.target.value })}
-                rows={2}
-              />
+                {/* Checklist */}
+                <Card>
+                  <CardHeader className="py-3">
+                    <CardTitle className="text-sm">Checklist</CardTitle>
+                  </CardHeader>
+                  <CardContent className="space-y-2">
+                    {defaultChecklist.map(item => (
+                      <div key={item} className="flex items-center gap-2">
+                        <Checkbox
+                          checked={checklist[item] || false}
+                          onCheckedChange={() => toggleChecklistItem(item)}
+                        />
+                        <span className="text-sm">{item}</span>
+                      </div>
+                    ))}
+                  </CardContent>
+                </Card>
+
+                {/* Dates */}
+                <Card>
+                  <CardHeader className="py-3">
+                    <CardTitle className="text-sm">Datas</CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <div>
+                      <Label>Previsão de Entrega</Label>
+                      <Input
+                        type="date"
+                        value={formData.estimated_date}
+                        onChange={(e) => setFormData({ ...formData, estimated_date: e.target.value })}
+                      />
+                    </div>
+                  </CardContent>
+                </Card>
+              </div>
             </div>
           </div>
 
-          <div className="flex justify-end gap-2">
-            <Button variant="outline" onClick={() => setShowModal(false)}>
-              Cancelar
-            </Button>
-            <Button 
-              onClick={handleSave} 
-              disabled={!formData.customer_id || !formData.equipment_type || !formData.defect_reported}
-            >
-              {selectedOrder ? 'Salvar' : 'Criar OS'}
-            </Button>
+          {/* Footer */}
+          <div className="flex items-center justify-between pt-4 border-t">
+            <div className="flex gap-2">
+              <Button variant="outline" onClick={() => printOS(selectedOrder)} disabled={!selectedOrder}>
+                <Printer className="w-4 h-4 mr-2" />
+                Imprimir OS
+              </Button>
+            </div>
+            <div className="flex gap-2">
+              <Button variant="outline" onClick={() => setShowModal(false)}>Cancelar</Button>
+              <Button onClick={handleSave}>
+                <Save className="w-4 h-4 mr-2" />
+                Salvar
+              </Button>
+            </div>
           </div>
         </DialogContent>
       </Dialog>
