@@ -132,6 +132,7 @@ export function QuotesPage() {
       await createQuote({
         seller_id: user.id,
         customer_id: formData.customer_id || null,
+        store_id: null,
         valid_until: formData.valid_until || null,
         notes: formData.notes || null,
         discount: formData.discount,
@@ -139,7 +140,8 @@ export function QuotesPage() {
         subtotal,
         total: subtotal - discount,
         status: 'pending',
-      }, quoteItems.map(item => ({
+        converted_sale_id: null,
+      } as any, quoteItems.map(item => ({
         product_id: item.product_id,
         quantity: item.quantity,
         unit_price: item.unit_price,

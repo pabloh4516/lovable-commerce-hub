@@ -76,7 +76,7 @@ export function FinancialPage() {
   });
   const { data: bankAccounts } = useBankAccounts();
   const { data: categories } = useFinancialCategories();
-  const { data: customers } = useCustomers();
+  const { customers } = useCustomers();
   const { data: suppliers } = useSuppliers();
   const { createTransaction, payTransaction } = useFinancialMutations();
 

@@ -18,23 +18,20 @@ export interface PaymentMethod {
 }
 
 export function usePaymentMethods() {
-  return useQuery({
+  const queryClient = useQueryClient();
+
+  const query = useQuery({
     queryKey: ['payment_methods'],
     queryFn: async () => {
       const { data, error } = await supabase
         .from('payment_methods')
         .select('*')
-        .eq('is_active', true)
         .order('sort_order');
       
       if (error) throw error;
       return data as PaymentMethod[];
     },
   });
-}
-
-export function usePaymentMethodMutations() {
-  const queryClient = useQueryClient();
 
   const createPaymentMethod = useMutation({
     mutationFn: async (method: Omit<PaymentMethod, 'id' | 'created_at'>) => {
@@ -99,5 +96,11 @@ export function usePaymentMethodMutations() {
     },
   });
 
-  return { createPaymentMethod, updatePaymentMethod, deletePaymentMethod };
+  return {
+    paymentMethods: query.data || [],
+    isLoading: query.isLoading,
+    createPaymentMethod: createPaymentMethod.mutateAsync,
+    updatePaymentMethod: updatePaymentMethod.mutateAsync,
+    deletePaymentMethod: deletePaymentMethod.mutateAsync,
+  };
 }

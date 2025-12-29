@@ -17,8 +17,8 @@ export interface Notification {
 export function useNotifications() {
   const [notifications, setNotifications] = useState<Notification[]>([]);
   const [lastCheck, setLastCheck] = useState<Date>(new Date());
-  const { data: products } = useProducts();
-  const { data: customers } = useCustomers();
+  const { products } = useProducts();
+  const { customers } = useCustomers();
 
   // Check for stock alerts
   const stockAlerts = useMemo(() => {

@@ -59,7 +59,7 @@ const priorityConfig: Record<string, { label: string; color: string }> = {
 
 export function ServiceOrdersPage() {
   const { data: serviceOrders, isLoading } = useServiceOrders();
-  const { data: customers } = useCustomers();
+  const { customers } = useCustomers();
   const { createServiceOrder, updateServiceOrder } = useServiceOrderMutations();
   
   const [searchQuery, setSearchQuery] = useState('');

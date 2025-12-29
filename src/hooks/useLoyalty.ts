@@ -320,3 +320,25 @@ export function usePointsCalculator() {
     activeProgram: programs?.[0] || null,
   };
 }
+
+// Hook agregado para uso na página de clientes
+export function useLoyalty() {
+  const { data: programs } = useLoyaltyPrograms();
+  
+  const { data: customerPoints } = useQuery({
+    queryKey: ['all-customer-points'],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('customer_points')
+        .select('*');
+      
+      if (error) throw error;
+      return data as CustomerPoints[];
+    },
+  });
+
+  return {
+    programs: programs || [],
+    customerPoints: customerPoints || [],
+  };
+}

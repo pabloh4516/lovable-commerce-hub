@@ -22,7 +22,7 @@ export function PaymentMethodsPage() {
   const [formData, setFormData] = useState({
     code: '',
     name: '',
-    type: 'cash',
+    type: 'cash' as 'cash' | 'credit' | 'debit' | 'pix' | 'boleto' | 'check' | 'fiado' | 'other',
     fee_percent: 0,
     fee_fixed: 0,
     installments_max: 1,
@@ -83,7 +83,7 @@ export function PaymentMethodsPage() {
       setFormData({
         code: '',
         name: '',
-        type: 'cash',
+        type: 'cash' as 'cash' | 'credit' | 'debit' | 'pix' | 'boleto' | 'check' | 'fiado' | 'other',
         fee_percent: 0,
         fee_fixed: 0,
         installments_max: 1,
@@ -308,7 +308,7 @@ export function PaymentMethodsPage() {
 
             <div className="space-y-2">
               <Label>Tipo</Label>
-              <Select value={formData.type} onValueChange={(v) => setFormData({...formData, type: v})}>
+              <Select value={formData.type} onValueChange={(v: 'cash' | 'credit' | 'debit' | 'pix' | 'boleto' | 'check' | 'fiado' | 'other') => setFormData({...formData, type: v})}>
                 <SelectTrigger>
                   <SelectValue />
                 </SelectTrigger>

@@ -29,7 +29,7 @@ export interface DbCategory {
 }
 
 export function useProducts() {
-  return useQuery({
+  const query = useQuery({
     queryKey: ['products'],
     queryFn: async () => {
       const { data, error } = await supabase
@@ -42,6 +42,12 @@ export function useProducts() {
       return data as DbProduct[];
     },
   });
+
+  return {
+    products: query.data || [],
+    isLoading: query.isLoading,
+    ...query,
+  };
 }
 
 export function useCategories() {
