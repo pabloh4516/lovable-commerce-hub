@@ -15,7 +15,14 @@ import {
   ChevronLeft,
   ChevronRight,
   Moon,
-  Sun
+  Sun,
+  Truck,
+  Wrench,
+  DollarSign,
+  ShoppingBag,
+  FileSpreadsheet,
+  CreditCard,
+  UserCircle
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useAuth } from '@/hooks/useAuth';
@@ -37,7 +44,14 @@ const menuItems = [
   { id: 'dashboard', label: 'Dashboard', icon: LayoutDashboard },
   { id: 'products', label: 'Produtos', icon: Package },
   { id: 'stock', label: 'Estoque', icon: Warehouse },
+  { id: 'customers', label: 'Clientes', icon: UserCircle },
+  { id: 'suppliers', label: 'Fornecedores', icon: Truck },
+  { id: 'quotes', label: 'Orçamentos', icon: FileSpreadsheet },
+  { id: 'service-orders', label: 'Ordem de Serviço', icon: Wrench },
+  { id: 'purchases', label: 'Compras', icon: ShoppingBag },
+  { id: 'financial', label: 'Financeiro', icon: DollarSign },
   { id: 'promotions', label: 'Promoções', icon: Tag },
+  { id: 'payment-methods', label: 'Formas de Pagamento', icon: CreditCard },
   { id: 'stores', label: 'Lojas', icon: Building2 },
   { id: 'reports', label: 'Relatórios', icon: BarChart3 },
   { id: 'audit', label: 'Auditoria', icon: FileText },

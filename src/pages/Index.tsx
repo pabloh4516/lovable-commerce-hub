@@ -10,6 +10,13 @@ import { StockPage } from '@/components/pos/StockPage';
 import { PromotionsManager } from '@/components/pos/PromotionsManager';
 import { StoresManager } from '@/components/pos/StoresManager';
 import { AuditPage } from '@/components/pos/AuditPage';
+import { SuppliersPage } from '@/components/pos/SuppliersPage';
+import { ServiceOrdersPage } from '@/components/pos/ServiceOrdersPage';
+import { FinancialPage } from '@/components/pos/FinancialPage';
+import { PurchasesPage } from '@/components/pos/PurchasesPage';
+import { QuotesPage } from '@/components/pos/QuotesPage';
+import { CustomersPage } from '@/components/pos/CustomersPage';
+import { PaymentMethodsPage } from '@/components/pos/PaymentMethodsPage';
 import { useDashboardStats } from '@/hooks/useDashboardStats';
 
 const Index = () => {
@@ -26,8 +33,22 @@ const Index = () => {
         return <ProductsPage />;
       case 'stock':
         return <StockPage />;
+      case 'customers':
+        return <CustomersPage />;
+      case 'suppliers':
+        return <SuppliersPage />;
+      case 'quotes':
+        return <QuotesPage />;
+      case 'service-orders':
+        return <ServiceOrdersPage />;
+      case 'purchases':
+        return <PurchasesPage />;
+      case 'financial':
+        return <FinancialPage />;
       case 'promotions':
         return <PromotionsManager />;
+      case 'payment-methods':
+        return <PaymentMethodsPage />;
       case 'stores':
         return <StoresManager />;
       case 'audit':
