@@ -1,100 +1,99 @@
 import { useState } from 'react';
-import { History, Search, Eye, Printer, Filter, Download, Calendar } from 'lucide-react';
+import { TrendingDown, Plus, Search, Filter, DollarSign, Calendar, Eye, CheckCircle } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { useSales } from '@/hooks/useSales';
+import { useFinancialTransactions } from '@/hooks/useFinancial';
 import { formatCurrency } from '@/lib/utils';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 
-export function SalesHistoryPage() {
-  const { data: sales, isLoading } = useSales();
+export function AccountsPayablePage() {
+  const { data: transactions, isLoading } = useFinancialTransactions({ type: 'payable' });
   const [search, setSearch] = useState('');
   const [statusFilter, setStatusFilter] = useState<string>('all');
 
-  const filteredSales = sales?.filter(sale => {
-    const matchesSearch = sale.number.toString().includes(search) ||
-      sale.customer?.name?.toLowerCase().includes(search.toLowerCase());
-    const matchesStatus = statusFilter === 'all' || sale.status === statusFilter;
+  const filtered = transactions?.filter(t => {
+    const matchesSearch = t.description.toLowerCase().includes(search.toLowerCase()) ||
+      t.supplier?.name?.toLowerCase().includes(search.toLowerCase());
+    const matchesStatus = statusFilter === 'all' || t.status === statusFilter;
     return matchesSearch && matchesStatus;
   }) || [];
 
   const getStatusBadge = (status: string) => {
     const variants: Record<string, { label: string; className: string }> = {
-      completed: { label: 'Concluída', className: 'bg-green-100 text-green-800' },
       pending: { label: 'Pendente', className: 'bg-yellow-100 text-yellow-800' },
-      cancelled: { label: 'Cancelada', className: 'bg-red-100 text-red-800' },
+      paid: { label: 'Pago', className: 'bg-green-100 text-green-800' },
+      partial: { label: 'Parcial', className: 'bg-blue-100 text-blue-800' },
+      overdue: { label: 'Vencido', className: 'bg-red-100 text-red-800' },
+      cancelled: { label: 'Cancelado', className: 'bg-gray-100 text-gray-800' },
     };
     const variant = variants[status] || { label: status, className: '' };
     return <Badge className={variant.className}>{variant.label}</Badge>;
   };
 
-  const totalSales = filteredSales.reduce((sum, sale) => sum + sale.total, 0);
-  const completedSales = filteredSales.filter(s => s.status === 'completed').length;
+  const totalPending = filtered.filter(t => t.status === 'pending' || t.status === 'overdue').reduce((sum, t) => sum + t.amount, 0);
+  const totalPaid = filtered.filter(t => t.status === 'paid').reduce((sum, t) => sum + t.amount, 0);
+  const totalOverdue = filtered.filter(t => t.status === 'overdue').reduce((sum, t) => sum + t.amount, 0);
 
   return (
     <div className="p-6 space-y-6">
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-2xl font-bold text-foreground flex items-center gap-2">
-            <History className="h-7 w-7" />
-            Histórico de Vendas
+            <TrendingDown className="h-7 w-7 text-red-600" />
+            Contas a Pagar
           </h1>
-          <p className="text-muted-foreground">Consulte todas as vendas realizadas</p>
+          <p className="text-muted-foreground">Gerencie suas contas e despesas</p>
         </div>
-        <div className="flex gap-2">
-          <Button variant="outline">
-            <Download className="h-4 w-4 mr-2" />
-            Exportar
-          </Button>
-        </div>
+        <Button>
+          <Plus className="h-4 w-4 mr-2" />
+          Nova Conta
+        </Button>
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
         <Card>
           <CardHeader className="pb-2">
             <CardTitle className="text-sm font-medium text-muted-foreground">
-              Total de Vendas
+              Total a Pagar
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{filteredSales.length}</div>
+            <div className="text-2xl font-bold text-red-600">{formatCurrency(totalPending)}</div>
           </CardContent>
         </Card>
         <Card>
           <CardHeader className="pb-2">
             <CardTitle className="text-sm font-medium text-muted-foreground">
-              Vendas Concluídas
+              Pago no Período
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold text-green-600">{completedSales}</div>
+            <div className="text-2xl font-bold text-green-600">{formatCurrency(totalPaid)}</div>
           </CardContent>
         </Card>
         <Card>
           <CardHeader className="pb-2">
             <CardTitle className="text-sm font-medium text-muted-foreground">
-              Valor Total
+              Vencidas
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{formatCurrency(totalSales)}</div>
+            <div className="text-2xl font-bold text-red-600">{formatCurrency(totalOverdue)}</div>
           </CardContent>
         </Card>
         <Card>
           <CardHeader className="pb-2">
             <CardTitle className="text-sm font-medium text-muted-foreground">
-              Ticket Médio
+              Qtd. Contas
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">
-              {formatCurrency(filteredSales.length > 0 ? totalSales / filteredSales.length : 0)}
-            </div>
+            <div className="text-2xl font-bold">{filtered.length}</div>
           </CardContent>
         </Card>
       </div>
@@ -105,7 +104,7 @@ export function SalesHistoryPage() {
             <div className="relative flex-1 max-w-sm">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
               <Input
-                placeholder="Buscar por número ou cliente..."
+                placeholder="Buscar por descrição ou fornecedor..."
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
                 className="pl-10"
@@ -118,9 +117,9 @@ export function SalesHistoryPage() {
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="all">Todos</SelectItem>
-                <SelectItem value="completed">Concluídas</SelectItem>
                 <SelectItem value="pending">Pendentes</SelectItem>
-                <SelectItem value="cancelled">Canceladas</SelectItem>
+                <SelectItem value="paid">Pagos</SelectItem>
+                <SelectItem value="overdue">Vencidos</SelectItem>
               </SelectContent>
             </Select>
           </div>
@@ -129,11 +128,11 @@ export function SalesHistoryPage() {
             <TableHeader>
               <TableRow>
                 <TableHead>Nº</TableHead>
-                <TableHead>Data/Hora</TableHead>
-                <TableHead>Cliente</TableHead>
-                <TableHead className="text-right">Subtotal</TableHead>
-                <TableHead className="text-right">Desconto</TableHead>
-                <TableHead className="text-right">Total</TableHead>
+                <TableHead>Vencimento</TableHead>
+                <TableHead>Descrição</TableHead>
+                <TableHead>Fornecedor</TableHead>
+                <TableHead className="text-right">Valor</TableHead>
+                <TableHead className="text-right">Pago</TableHead>
                 <TableHead className="text-center">Status</TableHead>
                 <TableHead className="text-right">Ações</TableHead>
               </TableRow>
@@ -145,37 +144,41 @@ export function SalesHistoryPage() {
                     Carregando...
                   </TableCell>
                 </TableRow>
-              ) : filteredSales.length === 0 ? (
+              ) : filtered.length === 0 ? (
                 <TableRow>
                   <TableCell colSpan={8} className="text-center py-8 text-muted-foreground">
-                    Nenhuma venda encontrada
+                    Nenhuma conta encontrada
                   </TableCell>
                 </TableRow>
               ) : (
-                filteredSales.map((sale) => (
-                  <TableRow key={sale.id}>
-                    <TableCell className="font-mono font-medium">#{sale.number}</TableCell>
+                filtered.map((transaction) => (
+                  <TableRow key={transaction.id}>
+                    <TableCell className="font-mono">#{transaction.number}</TableCell>
                     <TableCell>
                       <div className="flex items-center gap-2">
                         <Calendar className="h-4 w-4 text-muted-foreground" />
-                        {format(new Date(sale.created_at), "dd/MM/yyyy HH:mm", { locale: ptBR })}
+                        {format(new Date(transaction.due_date), "dd/MM/yyyy", { locale: ptBR })}
                       </div>
                     </TableCell>
-                    <TableCell>{sale.customer?.name || 'Cliente não identificado'}</TableCell>
-                    <TableCell className="text-right">{formatCurrency(sale.subtotal)}</TableCell>
-                    <TableCell className="text-right text-red-600">
-                      {sale.discount > 0 ? `-${formatCurrency(sale.discount)}` : '-'}
+                    <TableCell className="font-medium max-w-[200px] truncate">
+                      {transaction.description}
                     </TableCell>
-                    <TableCell className="text-right font-medium">{formatCurrency(sale.total)}</TableCell>
-                    <TableCell className="text-center">{getStatusBadge(sale.status)}</TableCell>
+                    <TableCell>{transaction.supplier?.name || '-'}</TableCell>
+                    <TableCell className="text-right font-medium">{formatCurrency(transaction.amount)}</TableCell>
+                    <TableCell className="text-right text-green-600">
+                      {formatCurrency(transaction.paid_amount || 0)}
+                    </TableCell>
+                    <TableCell className="text-center">{getStatusBadge(transaction.status)}</TableCell>
                     <TableCell className="text-right">
                       <div className="flex items-center justify-end gap-2">
                         <Button variant="ghost" size="icon">
                           <Eye className="h-4 w-4" />
                         </Button>
-                        <Button variant="ghost" size="icon">
-                          <Printer className="h-4 w-4" />
-                        </Button>
+                        {transaction.status !== 'paid' && (
+                          <Button variant="ghost" size="icon" className="text-green-600">
+                            <CheckCircle className="h-4 w-4" />
+                          </Button>
+                        )}
                       </div>
                     </TableCell>
                   </TableRow>

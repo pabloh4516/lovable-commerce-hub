@@ -12,14 +12,13 @@ import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 
 export function StockMovementsPage() {
-  const { movements, isLoading } = useStockMovements();
+  const { data: movements, isLoading } = useStockMovements();
   const [search, setSearch] = useState('');
   const [typeFilter, setTypeFilter] = useState<string>('all');
 
   const filtered = movements?.filter(m => {
-    const matchesSearch = m.product?.name?.toLowerCase().includes(search.toLowerCase());
     const matchesType = typeFilter === 'all' || m.type === typeFilter;
-    return matchesSearch && matchesType;
+    return matchesType;
   }) || [];
 
   const getTypeInfo = (type: string) => {
@@ -27,13 +26,18 @@ export function StockMovementsPage() {
       entrada: { label: 'Entrada', icon: ArrowUp, className: 'bg-green-100 text-green-800' },
       saida: { label: 'Saída', icon: ArrowDown, className: 'bg-red-100 text-red-800' },
       ajuste: { label: 'Ajuste', icon: ArrowUpDown, className: 'bg-blue-100 text-blue-800' },
-      transferencia: { label: 'Transferência', icon: ArrowUpDown, className: 'bg-purple-100 text-purple-800' },
+      transferencia_entrada: { label: 'Transfer. Entrada', icon: ArrowUp, className: 'bg-purple-100 text-purple-800' },
+      transferencia_saida: { label: 'Transfer. Saída', icon: ArrowDown, className: 'bg-purple-100 text-purple-800' },
+      venda: { label: 'Venda', icon: ArrowDown, className: 'bg-orange-100 text-orange-800' },
+      devolucao: { label: 'Devolução', icon: ArrowUp, className: 'bg-teal-100 text-teal-800' },
+      perda: { label: 'Perda', icon: ArrowDown, className: 'bg-red-100 text-red-800' },
+      inventario: { label: 'Inventário', icon: ArrowUpDown, className: 'bg-gray-100 text-gray-800' },
     };
     return types[type] || { label: type, icon: ArrowUpDown, className: '' };
   };
 
-  const entradas = filtered.filter(m => m.type === 'entrada').reduce((sum, m) => sum + m.quantity, 0);
-  const saidas = filtered.filter(m => m.type === 'saida').reduce((sum, m) => sum + Math.abs(m.quantity), 0);
+  const entradas = filtered.filter(m => ['entrada', 'transferencia_entrada', 'devolucao'].includes(m.type)).reduce((sum, m) => sum + m.quantity, 0);
+  const saidas = filtered.filter(m => ['saida', 'transferencia_saida', 'venda', 'perda'].includes(m.type)).reduce((sum, m) => sum + Math.abs(m.quantity), 0);
 
   return (
     <div className="p-6 space-y-6">
@@ -101,17 +105,8 @@ export function StockMovementsPage() {
       <Card>
         <CardContent className="pt-6">
           <div className="flex flex-col md:flex-row items-start md:items-center gap-4 mb-4">
-            <div className="relative flex-1 max-w-sm">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-              <Input
-                placeholder="Buscar por produto..."
-                value={search}
-                onChange={(e) => setSearch(e.target.value)}
-                className="pl-10"
-              />
-            </div>
             <Select value={typeFilter} onValueChange={setTypeFilter}>
-              <SelectTrigger className="w-[180px]">
+              <SelectTrigger className="w-[200px]">
                 <Filter className="h-4 w-4 mr-2" />
                 <SelectValue placeholder="Tipo" />
               </SelectTrigger>
@@ -120,7 +115,9 @@ export function StockMovementsPage() {
                 <SelectItem value="entrada">Entradas</SelectItem>
                 <SelectItem value="saida">Saídas</SelectItem>
                 <SelectItem value="ajuste">Ajustes</SelectItem>
-                <SelectItem value="transferencia">Transferências</SelectItem>
+                <SelectItem value="venda">Vendas</SelectItem>
+                <SelectItem value="devolucao">Devoluções</SelectItem>
+                <SelectItem value="perda">Perdas</SelectItem>
               </SelectContent>
             </Select>
           </div>
@@ -129,7 +126,6 @@ export function StockMovementsPage() {
             <TableHeader>
               <TableRow>
                 <TableHead>Data</TableHead>
-                <TableHead>Produto</TableHead>
                 <TableHead>Tipo</TableHead>
                 <TableHead className="text-right">Qtd. Anterior</TableHead>
                 <TableHead className="text-right">Quantidade</TableHead>
@@ -141,13 +137,13 @@ export function StockMovementsPage() {
             <TableBody>
               {isLoading ? (
                 <TableRow>
-                  <TableCell colSpan={8} className="text-center py-8">
+                  <TableCell colSpan={7} className="text-center py-8">
                     Carregando...
                   </TableCell>
                 </TableRow>
               ) : filtered.length === 0 ? (
                 <TableRow>
-                  <TableCell colSpan={8} className="text-center py-8 text-muted-foreground">
+                  <TableCell colSpan={7} className="text-center py-8 text-muted-foreground">
                     Nenhuma movimentação encontrada
                   </TableCell>
                 </TableRow>
@@ -163,7 +159,6 @@ export function StockMovementsPage() {
                           {format(new Date(movement.created_at || ''), "dd/MM/yyyy HH:mm", { locale: ptBR })}
                         </div>
                       </TableCell>
-                      <TableCell className="font-medium">{movement.product?.name}</TableCell>
                       <TableCell>
                         <Badge className={typeInfo.className}>
                           <TypeIcon className="h-3 w-3 mr-1" />

@@ -1,35 +1,46 @@
 import { useState } from 'react';
-import { UserCheck, Plus, Search, Edit, Trash2, DollarSign, Target } from 'lucide-react';
+import { Landmark, Plus, Search, Edit, Trash2, DollarSign } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
-import { useUsers } from '@/hooks/useUsers';
+import { useBankAccounts } from '@/hooks/useFinancial';
 import { formatCurrency } from '@/lib/utils';
 
-export function SellersPage() {
-  const { data: profiles, isLoading } = useUsers();
+export function BankAccountsPage() {
+  const { data: accounts, isLoading } = useBankAccounts();
   const [search, setSearch] = useState('');
 
-  const sellers = profiles?.filter(p => 
-    p.name.toLowerCase().includes(search.toLowerCase()) ||
-    p.code.toLowerCase().includes(search.toLowerCase())
+  const filtered = accounts?.filter(a =>
+    a.name.toLowerCase().includes(search.toLowerCase()) ||
+    a.bank_name?.toLowerCase().includes(search.toLowerCase())
   ) || [];
+
+  const totalBalance = filtered.reduce((sum, a) => sum + a.current_balance, 0);
+
+  const getAccountTypeLabel = (type: string) => {
+    const types: Record<string, string> = {
+      checking: 'Conta Corrente',
+      savings: 'Poupança',
+      cash: 'Caixa',
+    };
+    return types[type] || type;
+  };
 
   return (
     <div className="p-6 space-y-6">
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-2xl font-bold text-foreground flex items-center gap-2">
-            <UserCheck className="h-7 w-7" />
-            Vendedores
+            <Landmark className="h-7 w-7" />
+            Contas Bancárias
           </h1>
-          <p className="text-muted-foreground">Gerencie os vendedores do sistema</p>
+          <p className="text-muted-foreground">Gerencie suas contas bancárias e saldos</p>
         </div>
         <Button>
           <Plus className="h-4 w-4 mr-2" />
-          Novo Vendedor
+          Nova Conta
         </Button>
       </div>
 
@@ -37,34 +48,34 @@ export function SellersPage() {
         <Card>
           <CardHeader className="pb-2">
             <CardTitle className="text-sm font-medium text-muted-foreground">
-              Total de Vendedores
+              Total de Contas
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{sellers.length}</div>
+            <div className="text-2xl font-bold">{filtered.length}</div>
           </CardContent>
         </Card>
         <Card>
           <CardHeader className="pb-2">
             <CardTitle className="text-sm font-medium text-muted-foreground">
-              Vendedores Ativos
+              Saldo Total
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold text-green-600">
-              {sellers.filter(s => s.is_active).length}
+            <div className={`text-2xl font-bold ${totalBalance >= 0 ? 'text-green-600' : 'text-red-600'}`}>
+              {formatCurrency(totalBalance)}
             </div>
           </CardContent>
         </Card>
         <Card>
           <CardHeader className="pb-2">
             <CardTitle className="text-sm font-medium text-muted-foreground">
-              Vendedores Inativos
+              Contas Ativas
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold text-muted-foreground">
-              {sellers.filter(s => !s.is_active).length}
+            <div className="text-2xl font-bold text-green-600">
+              {filtered.filter(a => a.is_active).length}
             </div>
           </CardContent>
         </Card>
@@ -76,7 +87,7 @@ export function SellersPage() {
             <div className="relative flex-1 max-w-sm">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
               <Input
-                placeholder="Buscar por nome ou código..."
+                placeholder="Buscar conta..."
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
                 className="pl-10"
@@ -87,9 +98,13 @@ export function SellersPage() {
           <Table>
             <TableHeader>
               <TableRow>
-                <TableHead>Código</TableHead>
                 <TableHead>Nome</TableHead>
-                <TableHead>Função</TableHead>
+                <TableHead>Banco</TableHead>
+                <TableHead>Agência</TableHead>
+                <TableHead>Conta</TableHead>
+                <TableHead>Tipo</TableHead>
+                <TableHead className="text-right">Saldo Inicial</TableHead>
+                <TableHead className="text-right">Saldo Atual</TableHead>
                 <TableHead className="text-center">Status</TableHead>
                 <TableHead className="text-right">Ações</TableHead>
               </TableRow>
@@ -97,30 +112,41 @@ export function SellersPage() {
             <TableBody>
               {isLoading ? (
                 <TableRow>
-                  <TableCell colSpan={5} className="text-center py-8">
+                  <TableCell colSpan={9} className="text-center py-8">
                     Carregando...
                   </TableCell>
                 </TableRow>
-              ) : sellers.length === 0 ? (
+              ) : filtered.length === 0 ? (
                 <TableRow>
-                  <TableCell colSpan={5} className="text-center py-8 text-muted-foreground">
-                    Nenhum vendedor encontrado
+                  <TableCell colSpan={9} className="text-center py-8 text-muted-foreground">
+                    Nenhuma conta encontrada
                   </TableCell>
                 </TableRow>
               ) : (
-                sellers.map((seller) => (
-                  <TableRow key={seller.id}>
-                    <TableCell className="font-mono">{seller.code}</TableCell>
-                    <TableCell className="font-medium">{seller.name}</TableCell>
-                    <TableCell>
-                      <Badge variant="outline">
-                        {seller.role === 'admin' ? 'Administrador' : 
-                         seller.role === 'supervisor' ? 'Supervisor' : 'Operador'}
-                      </Badge>
+                filtered.map((account) => (
+                  <TableRow key={account.id}>
+                    <TableCell className="font-medium">
+                      <div className="flex items-center gap-2">
+                        <div className="w-8 h-8 bg-primary/10 rounded-full flex items-center justify-center">
+                          <DollarSign className="h-4 w-4 text-primary" />
+                        </div>
+                        {account.name}
+                        {account.is_default && (
+                          <Badge variant="secondary" className="ml-2">Padrão</Badge>
+                        )}
+                      </div>
+                    </TableCell>
+                    <TableCell>{account.bank_name || '-'}</TableCell>
+                    <TableCell className="font-mono">{account.agency || '-'}</TableCell>
+                    <TableCell className="font-mono">{account.account_number || '-'}</TableCell>
+                    <TableCell>{getAccountTypeLabel(account.account_type)}</TableCell>
+                    <TableCell className="text-right">{formatCurrency(account.initial_balance)}</TableCell>
+                    <TableCell className={`text-right font-medium ${account.current_balance >= 0 ? 'text-green-600' : 'text-red-600'}`}>
+                      {formatCurrency(account.current_balance)}
                     </TableCell>
                     <TableCell className="text-center">
-                      <Badge variant={seller.is_active ? "default" : "secondary"}>
-                        {seller.is_active ? 'Ativo' : 'Inativo'}
+                      <Badge variant={account.is_active ? "default" : "secondary"}>
+                        {account.is_active ? 'Ativa' : 'Inativa'}
                       </Badge>
                     </TableCell>
                     <TableCell className="text-right">

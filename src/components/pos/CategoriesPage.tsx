@@ -41,8 +41,8 @@ export function CategoriesPage() {
   });
 
   const createMutation = useMutation({
-    mutationFn: async (data: Partial<Category>) => {
-      const { error } = await supabase.from('categories').insert(data);
+    mutationFn: async (data: { name: string; color: string; icon: string }) => {
+      const { error } = await supabase.from('categories').insert([data]);
       if (error) throw error;
     },
     onSuccess: () => {
