@@ -4,38 +4,19 @@ import {
   ShoppingCart, 
   Package, 
   BarChart3, 
-  Users, 
   Settings,
   LogOut,
   Store,
   Warehouse,
-  Tag,
   Building2,
-  FileText,
   ChevronLeft,
   ChevronRight,
   ChevronDown,
-  Truck,
-  Wrench,
   DollarSign,
-  ShoppingBag,
-  FileSpreadsheet,
-  CreditCard,
+  Wrench,
   UserCircle,
   ClipboardList,
-  RotateCcw,
-  ArrowLeftRight,
-  Barcode,
-  FileInput,
-  Wallet,
-  Receipt,
-  Landmark,
-  PieChart,
-  TrendingUp,
-  Search,
-  AlertCircle,
-  Cake,
-  Grid3X3
+  FileSpreadsheet
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useAuth } from '@/hooks/useAuth';
@@ -63,6 +44,7 @@ interface MenuItem {
   children?: MenuItem[];
 }
 
+// Menu simplificado: ~15 itens organizados
 const menuItems: MenuItem[] = [
   { id: 'dashboard', label: 'Dashboard', icon: LayoutDashboard },
   { id: 'pos', label: 'Caixa (PDV)', icon: ShoppingCart },
@@ -71,13 +53,10 @@ const menuItems: MenuItem[] = [
     label: 'Cadastros', 
     icon: ClipboardList,
     children: [
-      { id: 'company', label: 'Empresa', icon: Building2 },
       { id: 'customers', label: 'Clientes', icon: UserCircle },
-      { id: 'suppliers', label: 'Fornecedores', icon: Truck },
       { id: 'products', label: 'Produtos', icon: Package },
-      { id: 'categories', label: 'Categorias', icon: Grid3X3 },
-      { id: 'sellers', label: 'Vendedores', icon: Users },
-      { id: 'payment-methods', label: 'Formas de Pagamento', icon: CreditCard },
+      { id: 'categories', label: 'Categorias', icon: Package },
+      { id: 'suppliers', label: 'Fornecedores', icon: Building2 },
     ]
   },
   { 
@@ -85,9 +64,9 @@ const menuItems: MenuItem[] = [
     label: 'Vendas', 
     icon: ShoppingCart,
     children: [
-      { id: 'sales-history', label: 'Histórico de Vendas', icon: ClipboardList },
+      { id: 'sales-history', label: 'Histórico', icon: ClipboardList },
       { id: 'quotes', label: 'Orçamentos', icon: FileSpreadsheet },
-      { id: 'returns', label: 'Devoluções', icon: RotateCcw },
+      { id: 'returns', label: 'Devoluções', icon: Package },
     ]
   },
   { 
@@ -95,19 +74,9 @@ const menuItems: MenuItem[] = [
     label: 'Estoque', 
     icon: Warehouse,
     children: [
-      { id: 'stock', label: 'Controle de Estoque', icon: Warehouse },
-      { id: 'stock-movements', label: 'Movimentações', icon: ArrowLeftRight },
-      { id: 'inventory', label: 'Inventário', icon: ClipboardList },
-      { id: 'labels', label: 'Etiquetas', icon: Barcode },
-    ]
-  },
-  { 
-    id: 'compras', 
-    label: 'Compras', 
-    icon: ShoppingBag,
-    children: [
-      { id: 'purchases', label: 'Registro de Compras', icon: ShoppingBag },
-      { id: 'import-xml', label: 'Importar XML', icon: FileInput },
+      { id: 'stock', label: 'Controle', icon: Warehouse },
+      { id: 'stock-movements', label: 'Movimentações', icon: Package },
+      { id: 'labels', label: 'Etiquetas', icon: Package },
     ]
   },
   { id: 'service-orders', label: 'Ordem de Serviço', icon: Wrench },
@@ -116,48 +85,19 @@ const menuItems: MenuItem[] = [
     label: 'Financeiro', 
     icon: DollarSign,
     children: [
-      { id: 'cash-management', label: 'Caixa', icon: Wallet },
-      { id: 'cash-flow', label: 'Fluxo de Caixa', icon: TrendingUp },
-      { id: 'accounts-payable', label: 'Contas a Pagar', icon: Receipt },
+      { id: 'cash-management', label: 'Caixa', icon: DollarSign },
+      { id: 'accounts-payable', label: 'Contas a Pagar', icon: DollarSign },
       { id: 'accounts-receivable', label: 'Contas a Receber', icon: DollarSign },
-      { id: 'checks', label: 'Cheques', icon: FileText },
-      { id: 'bank-accounts', label: 'Contas Bancárias', icon: Landmark },
     ]
   },
-  { 
-    id: 'relatorios', 
-    label: 'Relatórios', 
-    icon: BarChart3,
-    children: [
-      { id: 'reports', label: 'Visão Geral', icon: BarChart3 },
-      { id: 'reports-sales', label: 'Vendas', icon: TrendingUp },
-      { id: 'reports-stock', label: 'Estoque', icon: Warehouse },
-      { id: 'reports-financial', label: 'Financeiro', icon: DollarSign },
-      { id: 'reports-commissions', label: 'Comissões', icon: Users },
-      { id: 'reports-dre', label: 'DRE', icon: PieChart },
-    ]
-  },
-  { 
-    id: 'consultas', 
-    label: 'Consultas', 
-    icon: Search,
-    children: [
-      { id: 'product-search', label: 'Produtos', icon: Package },
-      { id: 'overdue-customers', label: 'Clientes em Atraso', icon: AlertCircle },
-      { id: 'birthdays', label: 'Aniversariantes', icon: Cake },
-    ]
-  },
-  { id: 'promotions', label: 'Promoções', icon: Tag },
-  { id: 'stores', label: 'Lojas', icon: Building2 },
-  { id: 'audit', label: 'Auditoria', icon: FileText },
-  { id: 'users', label: 'Usuários', icon: Users },
+  { id: 'reports', label: 'Relatórios', icon: BarChart3 },
   { id: 'settings', label: 'Configurações', icon: Settings },
 ];
 
 export function Sidebar({ currentPage, onNavigate }: SidebarProps) {
   const { profile, role, signOut } = useAuth();
   const [isCollapsed, setIsCollapsed] = useState(false);
-  const [openGroups, setOpenGroups] = useState<string[]>(['cadastros', 'vendas', 'estoque', 'financeiro']);
+  const [openGroups, setOpenGroups] = useState<string[]>(['cadastros']);
 
   const toggleGroup = (groupId: string) => {
     setOpenGroups(prev => 
@@ -281,7 +221,7 @@ export function Sidebar({ currentPage, onNavigate }: SidebarProps) {
       <aside 
         className={cn(
           "h-screen bg-sidebar flex flex-col transition-all duration-300 ease-out relative shrink-0",
-          isCollapsed ? "w-16" : "w-64"
+          isCollapsed ? "w-16" : "w-56"
         )}
       >
         {/* Collapse Toggle */}
