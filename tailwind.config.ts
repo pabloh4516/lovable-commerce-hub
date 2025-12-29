@@ -67,6 +67,26 @@ export default {
           4: "hsl(var(--chart-4))",
           5: "hsl(var(--chart-5))",
         },
+        sidebar: {
+          DEFAULT: "hsl(var(--sidebar))",
+          foreground: "hsl(var(--sidebar-foreground))",
+          accent: "hsl(var(--sidebar-accent))",
+          border: "hsl(var(--sidebar-border))",
+        },
+        stat: {
+          blue: "hsl(var(--stat-blue))",
+          green: "hsl(var(--stat-green))",
+          orange: "hsl(var(--stat-orange))",
+          pink: "hsl(var(--stat-pink))",
+        },
+        alert: {
+          banner: "hsl(var(--alert-banner))",
+          border: "hsl(var(--alert-border))",
+          text: "hsl(var(--alert-text))",
+          icon: "hsl(var(--alert-icon))",
+          button: "hsl(var(--alert-button))",
+          "button-text": "hsl(var(--alert-button-text))",
+        },
       },
       borderRadius: {
         lg: "var(--radius)",
