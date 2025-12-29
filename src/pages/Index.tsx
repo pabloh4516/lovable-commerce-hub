@@ -33,6 +33,7 @@ import { BankAccountsPage } from '@/components/pos/BankAccountsPage';
 import { ProductSearchPage } from '@/components/pos/ProductSearchPage';
 import { OverdueCustomersPage } from '@/components/pos/OverdueCustomersPage';
 import { BirthdaysPage } from '@/components/pos/BirthdaysPage';
+import { CashFlowPage } from '@/components/pos/CashFlowPage';
 import { useDashboardStats } from '@/hooks/useDashboardStats';
 
 const Index = () => {
@@ -101,6 +102,8 @@ const Index = () => {
         return <PurchasesPage />; // TODO: Create ImportXMLPage
       case 'cash-management':
         return <CashManagementPage />;
+      case 'cash-flow':
+        return <CashFlowPage />;
       case 'accounts-payable':
         return <AccountsPayablePage />;
       case 'accounts-receivable':

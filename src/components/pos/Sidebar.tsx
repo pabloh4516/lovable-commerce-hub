@@ -117,6 +117,7 @@ const menuItems: MenuItem[] = [
     icon: DollarSign,
     children: [
       { id: 'cash-management', label: 'Caixa', icon: Wallet },
+      { id: 'cash-flow', label: 'Fluxo de Caixa', icon: TrendingUp },
       { id: 'accounts-payable', label: 'Contas a Pagar', icon: Receipt },
       { id: 'accounts-receivable', label: 'Contas a Receber', icon: DollarSign },
       { id: 'checks', label: 'Cheques', icon: FileText },
