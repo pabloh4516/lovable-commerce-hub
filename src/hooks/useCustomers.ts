@@ -6,18 +6,40 @@ export interface DbCustomer {
   id: string;
   name: string;
   cpf: string | null;
+  cnpj: string | null;
+  rg: string | null;
+  ie: string | null;
+  fantasy_name: string | null;
   phone: string | null;
+  phone2: string | null;
   email: string | null;
   address: string | null;
+  number: string | null;
+  complement: string | null;
+  neighborhood: string | null;
+  city: string | null;
+  state: string | null;
+  cep: string | null;
+  birth_date: string | null;
+  gender: string | null;
+  profession: string | null;
+  workplace: string | null;
+  income: number | null;
   credit_limit: number;
   current_debt: number;
   is_active: boolean;
+  is_blocked: boolean | null;
+  block_reason: string | null;
+  notes: string | null;
+  image_url: string | null;
   created_at: string;
   updated_at: string;
 }
 
 export function useCustomers() {
-  return useQuery({
+  const queryClient = useQueryClient();
+
+  const query = useQuery({
     queryKey: ['customers'],
     queryFn: async () => {
       const { data, error } = await supabase
@@ -30,10 +52,6 @@ export function useCustomers() {
       return data as DbCustomer[];
     },
   });
-}
-
-export function useCustomerMutations() {
-  const queryClient = useQueryClient();
 
   const createCustomer = useMutation({
     mutationFn: async (customer: Omit<DbCustomer, 'id' | 'created_at' | 'updated_at' | 'is_active'>) => {
@@ -80,5 +98,29 @@ export function useCustomerMutations() {
     },
   });
 
-  return { createCustomer, updateCustomer };
+  const deleteCustomer = useMutation({
+    mutationFn: async (id: string) => {
+      const { error } = await supabase
+        .from('customers')
+        .update({ is_active: false })
+        .eq('id', id);
+      
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['customers'] });
+      toast.success('Cliente excluído!');
+    },
+    onError: () => {
+      toast.error('Erro ao excluir cliente');
+    },
+  });
+
+  return {
+    customers: query.data || [],
+    isLoading: query.isLoading,
+    createCustomer: createCustomer.mutateAsync,
+    updateCustomer: updateCustomer.mutateAsync,
+    deleteCustomer: deleteCustomer.mutateAsync,
+  };
 }

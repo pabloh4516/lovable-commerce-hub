@@ -27,8 +27,8 @@ const navigationItems = [
 ];
 
 export function useGlobalSearch(query: string) {
-  const { data: products } = useProducts();
-  const { data: customers } = useCustomers();
+  const { products } = useProducts();
+  const { customers } = useCustomers();
   const { data: sales } = useSales();
   const { data: categories } = useCategories();
 

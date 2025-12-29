@@ -37,10 +37,12 @@ export interface QuoteItem {
 }
 
 export function useQuotes(filters?: { status?: string }) {
-  return useQuery({
+  const queryClient = useQueryClient();
+
+  const query = useQuery({
     queryKey: ['quotes', filters],
     queryFn: async () => {
-      let query = supabase
+      let q = supabase
         .from('quotes')
         .select(`
           *,
@@ -49,15 +51,137 @@ export function useQuotes(filters?: { status?: string }) {
         .order('created_at', { ascending: false });
       
       if (filters?.status) {
-        query = query.eq('status', filters.status);
+        q = q.eq('status', filters.status);
       }
       
-      const { data, error } = await query;
+      const { data, error } = await q;
       
       if (error) throw error;
       return data as unknown as Quote[];
     },
   });
+
+  const createQuote = useMutation({
+    mutationFn: async (
+      quote: Omit<Quote, 'id' | 'number' | 'created_at' | 'updated_at' | 'customer' | 'seller'>,
+      items?: Array<{ product_id: string; quantity: number; unit_price: number; discount: number; subtotal: number }>
+    ) => {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) throw new Error('Usuário não autenticado');
+
+      const { data, error } = await supabase
+        .from('quotes')
+        .insert({ ...quote, seller_id: user.id })
+        .select()
+        .single();
+      
+      if (error) throw error;
+
+      // Insert items if provided
+      if (items && items.length > 0) {
+        const itemsWithQuoteId = items.map(item => ({
+          product_id: item.product_id,
+          quote_id: data.id,
+          quantity: item.quantity,
+          unit_price: item.unit_price,
+          discount: item.discount,
+          discount_type: 'value',
+          subtotal: item.subtotal,
+          variation_id: null,
+        }));
+        const { error: itemsError } = await supabase
+          .from('quote_items')
+          .insert(itemsWithQuoteId);
+        if (itemsError) throw itemsError;
+      }
+
+      return data;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['quotes'] });
+      toast.success('Orçamento criado!');
+    },
+    onError: () => {
+      toast.error('Erro ao criar orçamento');
+    },
+  });
+
+  const updateQuote = useMutation({
+    mutationFn: async ({ id, ...quote }: Partial<Quote> & { id: string }) => {
+      const { data, error } = await supabase
+        .from('quotes')
+        .update(quote)
+        .eq('id', id)
+        .select()
+        .single();
+      
+      if (error) throw error;
+      return data;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['quotes'] });
+      toast.success('Orçamento atualizado!');
+    },
+    onError: () => {
+      toast.error('Erro ao atualizar orçamento');
+    },
+  });
+
+  const deleteQuote = useMutation({
+    mutationFn: async (id: string) => {
+      const { error } = await supabase
+        .from('quotes')
+        .update({ status: 'cancelled' })
+        .eq('id', id);
+      
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['quotes'] });
+      toast.success('Orçamento excluído!');
+    },
+    onError: () => {
+      toast.error('Erro ao excluir orçamento');
+    },
+  });
+
+  const convertToSale = useMutation({
+    mutationFn: async (quoteId: string) => {
+      const { data: quote } = await supabase
+        .from('quotes')
+        .select('*')
+        .eq('id', quoteId)
+        .single();
+
+      if (!quote) throw new Error('Orçamento não encontrado');
+
+      const { error } = await supabase
+        .from('quotes')
+        .update({ status: 'converted' })
+        .eq('id', quoteId);
+
+      if (error) throw error;
+
+      return quote;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['quotes'] });
+      toast.success('Orçamento convertido em venda!');
+    },
+    onError: () => {
+      toast.error('Erro ao converter orçamento');
+    },
+  });
+
+  return {
+    quotes: query.data || [],
+    isLoading: query.isLoading,
+    createQuote: (quote: Omit<Quote, 'id' | 'number' | 'created_at' | 'updated_at' | 'customer' | 'seller'>, items?: Array<{ product_id: string; quantity: number; unit_price: number; discount: number; subtotal: number }>) => 
+      createQuote.mutateAsync([quote, items] as any),
+    updateQuote: updateQuote.mutateAsync,
+    deleteQuote: deleteQuote.mutateAsync,
+    convertToSale: convertToSale.mutateAsync,
+  };
 }
 
 export function useQuoteItems(quoteId: string) {

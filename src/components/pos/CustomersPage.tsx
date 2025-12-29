@@ -13,6 +13,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { toast } from 'sonner';
 import { useCustomers } from '@/hooks/useCustomers';
 import { useLoyalty } from '@/hooks/useLoyalty';
+import type { DbCustomer } from '@/hooks/useCustomers';
 import { format, differenceInDays } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 
@@ -135,13 +136,14 @@ export function CustomersPage() {
         ...formData,
         income: formData.income || null,
         birth_date: formData.birth_date || null,
+        current_debt: 0,
+        image_url: null,
       };
       
       if (editingId) {
         await updateCustomer({ id: editingId, ...customerData });
-        toast.success('Cliente atualizado!');
       } else {
-        await createCustomer(customerData);
+        await createCustomer(customerData as any);
         toast.success('Cliente cadastrado!');
       }
       setIsModalOpen(false);
