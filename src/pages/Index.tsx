@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { AppHeader } from '@/components/pos/AppHeader';
+import { Sidebar } from '@/components/pos/Sidebar';
 import { POSScreen } from '@/components/pos/POSScreen';
 import { Dashboard } from '@/components/pos/Dashboard';
 import { ProductsPage } from '@/components/pos/ProductsPage';
@@ -20,7 +20,7 @@ import { PaymentMethodsPage } from '@/components/pos/PaymentMethodsPage';
 import { useDashboardStats } from '@/hooks/useDashboardStats';
 
 const Index = () => {
-  const [currentPage, setCurrentPage] = useState('pos');
+  const [currentPage, setCurrentPage] = useState('dashboard');
   const { stats } = useDashboardStats();
 
   const renderPage = () => {
@@ -28,7 +28,7 @@ const Index = () => {
       case 'pos':
         return <POSScreen currentPage={currentPage} onNavigate={setCurrentPage} />;
       case 'dashboard':
-        return <Dashboard stats={stats} />;
+        return <Dashboard stats={stats} onNavigate={setCurrentPage} />;
       case 'products':
         return <ProductsPage />;
       case 'stock':
@@ -60,13 +60,13 @@ const Index = () => {
       case 'settings':
         return <SettingsPage />;
       default:
-        return <POSScreen currentPage={currentPage} onNavigate={setCurrentPage} />;
+        return <Dashboard stats={stats} onNavigate={setCurrentPage} />;
     }
   };
 
   return (
-    <div className="flex flex-col h-screen bg-background w-full">
-      <AppHeader currentPage={currentPage} onNavigate={setCurrentPage} />
+    <div className="flex h-screen bg-background w-full">
+      <Sidebar currentPage={currentPage} onNavigate={setCurrentPage} />
       <main className="flex-1 overflow-hidden">{renderPage()}</main>
     </div>
   );
