@@ -113,38 +113,35 @@ export function AppHeader({ currentPage, onNavigate }: AppHeaderProps) {
   };
 
   return (
-    <header className="h-18 bg-card/95 backdrop-blur-xl border-b border-border/50 flex items-center px-6 gap-4 shadow-sm sticky top-0 z-50">
+    <header className="h-16 min-h-[64px] shrink-0 bg-card border-b border-border flex items-center px-4 lg:px-6 gap-3 lg:gap-4 shadow-sm sticky top-0 z-50">
       {/* Logo */}
-      <div className="flex items-center gap-3 pr-6 border-r border-border/50">
+      <div className="flex items-center gap-2 lg:gap-3 pr-4 lg:pr-6 border-r border-border shrink-0">
         <div className="relative">
-          <div className="w-11 h-11 rounded-2xl bg-gradient-primary flex items-center justify-center shadow-glow">
+          <div className="w-10 h-10 lg:w-11 lg:h-11 rounded-2xl bg-primary flex items-center justify-center shadow-md">
             <Store className="w-5 h-5 text-primary-foreground" />
           </div>
           <div className="absolute -top-1 -right-1 w-4 h-4 rounded-full bg-success flex items-center justify-center">
             <Sparkles className="w-2.5 h-2.5 text-success-foreground" />
           </div>
         </div>
-        <div className="hidden lg:block">
+        <div className="hidden xl:block">
           <span className="font-bold text-base">PDV Express</span>
           <span className="text-xs text-primary font-semibold ml-2 px-2 py-0.5 rounded-full bg-primary/10">Pro</span>
         </div>
       </div>
 
-      {/* Caixa Button - Premium */}
+      {/* Caixa Button */}
       <button
         onClick={() => onNavigate('pos')}
         className={cn(
-          "group relative flex items-center gap-2.5 px-6 py-3 rounded-xl font-semibold transition-all duration-300 ml-2 overflow-hidden",
+          "group relative flex items-center gap-2 px-4 lg:px-6 py-2.5 rounded-xl font-semibold transition-all duration-200 shrink-0",
           currentPage === 'pos'
-            ? "bg-gradient-primary text-primary-foreground shadow-glow"
-            : "bg-primary/10 text-primary hover:bg-gradient-primary hover:text-primary-foreground hover:shadow-glow"
+            ? "bg-primary text-primary-foreground shadow-md"
+            : "bg-primary/10 text-primary hover:bg-primary hover:text-primary-foreground"
         )}
       >
-        <ShoppingCart className="w-5 h-5 transition-transform group-hover:scale-110" />
-        <span className="text-sm">Abrir Caixa</span>
-        {currentPage !== 'pos' && (
-          <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/10 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-700" />
-        )}
+        <ShoppingCart className="w-5 h-5" />
+        <span className="hidden sm:inline text-sm">Abrir Caixa</span>
       </button>
 
       {/* Navigation Sections - Desktop */}
@@ -161,7 +158,7 @@ export function AppHeader({ currentPage, onNavigate }: AppHeaderProps) {
                 {section.label}
               </NavigationMenuTrigger>
               <NavigationMenuContent>
-                <div className="w-72 p-3 bg-card/95 backdrop-blur-xl border border-border/50 rounded-2xl shadow-xl">
+                <div className="w-72 p-3 bg-card border border-border rounded-2xl shadow-xl">
                   {section.items.map((item) => {
                     const Icon = item.icon;
                     return (
@@ -246,10 +243,10 @@ export function AppHeader({ currentPage, onNavigate }: AppHeaderProps) {
         <StoreSelector />
       </div>
 
-      {/* Time - Premium Style */}
-      <div className="hidden sm:flex items-center gap-2 px-4 py-2 rounded-xl bg-muted/30 border border-border/30">
+      {/* Time */}
+      <div className="hidden lg:flex items-center gap-2 px-3 py-2 rounded-xl bg-muted border border-border shrink-0">
         <Clock className="w-4 h-4 text-primary" />
-        <span className="tabular-nums font-bold text-sm">{formatTime(currentTime)}</span>
+        <span className="tabular-nums font-semibold text-sm">{formatTime(currentTime)}</span>
       </div>
 
       {/* Notifications */}
@@ -261,7 +258,7 @@ export function AppHeader({ currentPage, onNavigate }: AppHeaderProps) {
       {/* Theme Toggle */}
       <button
         onClick={() => setTheme(theme === 'dark' ? 'light' : 'dark')}
-        className="w-11 h-11 rounded-xl flex items-center justify-center hover:bg-muted/50 transition-all duration-200 border border-border/30"
+        className="hidden sm:flex w-10 h-10 rounded-xl items-center justify-center hover:bg-muted transition-colors border border-border shrink-0"
       >
         {theme === 'dark' ? (
           <Sun className="w-5 h-5 text-warning" />
@@ -273,9 +270,9 @@ export function AppHeader({ currentPage, onNavigate }: AppHeaderProps) {
       {/* User Menu - Premium */}
       <DropdownMenu>
         <DropdownMenuTrigger asChild>
-          <button className="flex items-center gap-4 pl-4 border-l border-border/50 hover:bg-muted/30 rounded-r-xl transition-colors py-2 pr-2">
+          <button className="flex items-center gap-2 lg:gap-3 pl-3 lg:pl-4 border-l border-border hover:bg-muted rounded-r-xl transition-colors py-2 pr-2 shrink-0">
             <div className="relative">
-              <div className="w-11 h-11 rounded-xl bg-gradient-to-br from-primary/20 to-primary/5 text-primary flex items-center justify-center text-sm font-bold border border-primary/20">
+              <div className="w-10 h-10 rounded-xl bg-primary/10 text-primary flex items-center justify-center text-sm font-bold border border-primary/20">
                 {profile?.name ? getInitials(profile.name) : <User className="w-5 h-5" />}
               </div>
               <div className="absolute -bottom-0.5 -right-0.5 w-3.5 h-3.5 rounded-full bg-success border-2 border-card" />
