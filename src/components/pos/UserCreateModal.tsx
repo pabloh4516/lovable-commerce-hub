@@ -66,25 +66,32 @@ export function UserCreateModal({ open, onOpenChange }: UserCreateModalProps) {
     setIsLoading(true);
 
     try {
-      const { error } = await supabase.auth.signUp({
-        email: formData.email,
-        password: formData.password,
-        options: {
-          emailRedirectTo: `${window.location.origin}/`,
-          data: {
-            name: formData.name,
-            code: formData.code,
-            role: formData.role,
-          },
+      // Get current session token
+      const { data: { session } } = await supabase.auth.getSession();
+      
+      if (!session) {
+        toast.error('Você precisa estar logado para criar usuários');
+        return;
+      }
+
+      // Call Edge Function to create user (doesn't affect current session)
+      const { data, error } = await supabase.functions.invoke('create-user', {
+        body: {
+          email: formData.email,
+          password: formData.password,
+          name: formData.name,
+          code: formData.code,
+          role: formData.role,
         },
       });
 
       if (error) {
-        if (error.message.includes('already registered')) {
-          toast.error('Este email já está cadastrado');
-        } else {
-          toast.error(error.message);
-        }
+        toast.error(error.message || 'Erro ao criar usuário');
+        return;
+      }
+
+      if (data?.error) {
+        toast.error(data.error);
         return;
       }
 
@@ -93,6 +100,7 @@ export function UserCreateModal({ open, onOpenChange }: UserCreateModalProps) {
       resetForm();
       onOpenChange(false);
     } catch (error) {
+      console.error('Error creating user:', error);
       toast.error('Erro ao criar usuário');
     } finally {
       setIsLoading(false);
