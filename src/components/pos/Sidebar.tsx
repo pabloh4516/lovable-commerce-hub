@@ -21,7 +21,21 @@ import {
   ShoppingBag,
   FileSpreadsheet,
   CreditCard,
-  UserCircle
+  UserCircle,
+  ClipboardList,
+  RotateCcw,
+  ArrowLeftRight,
+  Barcode,
+  FileInput,
+  Wallet,
+  Receipt,
+  Landmark,
+  PieChart,
+  TrendingUp,
+  Search,
+  AlertCircle,
+  Cake,
+  Grid3X3
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useAuth } from '@/hooks/useAuth';
@@ -31,27 +45,109 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
+import {
+  Collapsible,
+  CollapsibleContent,
+  CollapsibleTrigger,
+} from "@/components/ui/collapsible";
 
 interface SidebarProps {
   currentPage: string;
   onNavigate: (page: string) => void;
 }
 
-const menuItems = [
+interface MenuItem {
+  id: string;
+  label: string;
+  icon: any;
+  children?: MenuItem[];
+}
+
+const menuItems: MenuItem[] = [
   { id: 'dashboard', label: 'Dashboard', icon: LayoutDashboard },
   { id: 'pos', label: 'Caixa (PDV)', icon: ShoppingCart },
-  { id: 'products', label: 'Produtos', icon: Package },
-  { id: 'stock', label: 'Estoque', icon: Warehouse },
-  { id: 'customers', label: 'Clientes', icon: UserCircle },
-  { id: 'suppliers', label: 'Fornecedores', icon: Truck },
-  { id: 'quotes', label: 'Orçamentos', icon: FileSpreadsheet },
+  { 
+    id: 'cadastros', 
+    label: 'Cadastros', 
+    icon: ClipboardList,
+    children: [
+      { id: 'company', label: 'Empresa', icon: Building2 },
+      { id: 'customers', label: 'Clientes', icon: UserCircle },
+      { id: 'suppliers', label: 'Fornecedores', icon: Truck },
+      { id: 'products', label: 'Produtos', icon: Package },
+      { id: 'categories', label: 'Categorias', icon: Grid3X3 },
+      { id: 'sellers', label: 'Vendedores', icon: Users },
+      { id: 'payment-methods', label: 'Formas de Pagamento', icon: CreditCard },
+    ]
+  },
+  { 
+    id: 'vendas', 
+    label: 'Vendas', 
+    icon: ShoppingCart,
+    children: [
+      { id: 'sales-history', label: 'Histórico de Vendas', icon: ClipboardList },
+      { id: 'quotes', label: 'Orçamentos', icon: FileSpreadsheet },
+      { id: 'returns', label: 'Devoluções', icon: RotateCcw },
+    ]
+  },
+  { 
+    id: 'estoque', 
+    label: 'Estoque', 
+    icon: Warehouse,
+    children: [
+      { id: 'stock', label: 'Controle de Estoque', icon: Warehouse },
+      { id: 'stock-movements', label: 'Movimentações', icon: ArrowLeftRight },
+      { id: 'inventory', label: 'Inventário', icon: ClipboardList },
+      { id: 'labels', label: 'Etiquetas', icon: Barcode },
+    ]
+  },
+  { 
+    id: 'compras', 
+    label: 'Compras', 
+    icon: ShoppingBag,
+    children: [
+      { id: 'purchases', label: 'Registro de Compras', icon: ShoppingBag },
+      { id: 'import-xml', label: 'Importar XML', icon: FileInput },
+    ]
+  },
   { id: 'service-orders', label: 'Ordem de Serviço', icon: Wrench },
-  { id: 'purchases', label: 'Compras', icon: ShoppingBag },
-  { id: 'financial', label: 'Financeiro', icon: DollarSign },
+  { 
+    id: 'financeiro', 
+    label: 'Financeiro', 
+    icon: DollarSign,
+    children: [
+      { id: 'cash-management', label: 'Caixa', icon: Wallet },
+      { id: 'accounts-payable', label: 'Contas a Pagar', icon: Receipt },
+      { id: 'accounts-receivable', label: 'Contas a Receber', icon: DollarSign },
+      { id: 'checks', label: 'Cheques', icon: FileText },
+      { id: 'bank-accounts', label: 'Contas Bancárias', icon: Landmark },
+    ]
+  },
+  { 
+    id: 'relatorios', 
+    label: 'Relatórios', 
+    icon: BarChart3,
+    children: [
+      { id: 'reports', label: 'Visão Geral', icon: BarChart3 },
+      { id: 'reports-sales', label: 'Vendas', icon: TrendingUp },
+      { id: 'reports-stock', label: 'Estoque', icon: Warehouse },
+      { id: 'reports-financial', label: 'Financeiro', icon: DollarSign },
+      { id: 'reports-commissions', label: 'Comissões', icon: Users },
+      { id: 'reports-dre', label: 'DRE', icon: PieChart },
+    ]
+  },
+  { 
+    id: 'consultas', 
+    label: 'Consultas', 
+    icon: Search,
+    children: [
+      { id: 'product-search', label: 'Produtos', icon: Package },
+      { id: 'overdue-customers', label: 'Clientes em Atraso', icon: AlertCircle },
+      { id: 'birthdays', label: 'Aniversariantes', icon: Cake },
+    ]
+  },
   { id: 'promotions', label: 'Promoções', icon: Tag },
-  { id: 'payment-methods', label: 'Formas de Pagamento', icon: CreditCard },
   { id: 'stores', label: 'Lojas', icon: Building2 },
-  { id: 'reports', label: 'Relatórios', icon: BarChart3 },
   { id: 'audit', label: 'Auditoria', icon: FileText },
   { id: 'users', label: 'Usuários', icon: Users },
   { id: 'settings', label: 'Configurações', icon: Settings },
@@ -60,6 +156,20 @@ const menuItems = [
 export function Sidebar({ currentPage, onNavigate }: SidebarProps) {
   const { profile, role, signOut } = useAuth();
   const [isCollapsed, setIsCollapsed] = useState(false);
+  const [openGroups, setOpenGroups] = useState<string[]>(['cadastros', 'vendas', 'estoque', 'financeiro']);
+
+  const toggleGroup = (groupId: string) => {
+    setOpenGroups(prev => 
+      prev.includes(groupId) 
+        ? prev.filter(id => id !== groupId)
+        : [...prev, groupId]
+    );
+  };
+
+  const isChildActive = (item: MenuItem) => {
+    if (!item.children) return false;
+    return item.children.some(child => child.id === currentPage);
+  };
 
   const getInitials = (name: string) => {
     return name
@@ -83,6 +193,86 @@ export function Sidebar({ currentPage, onNavigate }: SidebarProps) {
 
   const handleLogout = async () => {
     await signOut();
+  };
+
+  const renderMenuItem = (item: MenuItem, isChild = false) => {
+    const Icon = item.icon;
+    const isActive = currentPage === item.id;
+    const hasChildren = item.children && item.children.length > 0;
+    const isOpen = openGroups.includes(item.id);
+    const hasActiveChild = isChildActive(item);
+
+    if (hasChildren && !isCollapsed) {
+      return (
+        <Collapsible
+          key={item.id}
+          open={isOpen}
+          onOpenChange={() => toggleGroup(item.id)}
+        >
+          <CollapsibleTrigger asChild>
+            <button
+              className={cn(
+                'w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors',
+                'text-sidebar-foreground/70 hover:text-sidebar-foreground hover:bg-sidebar-accent',
+                hasActiveChild && 'bg-sidebar-accent/50 text-sidebar-foreground'
+              )}
+            >
+              <Icon className={cn("w-5 h-5 shrink-0", hasActiveChild && "text-primary")} />
+              <span className="flex-1 text-left whitespace-nowrap">{item.label}</span>
+              <ChevronDown className={cn(
+                "w-4 h-4 transition-transform duration-200",
+                isOpen && "rotate-180"
+              )} />
+            </button>
+          </CollapsibleTrigger>
+          <CollapsibleContent className="overflow-hidden data-[state=open]:animate-accordion-down data-[state=closed]:animate-accordion-up">
+            <div className="pl-4 mt-1 space-y-1 border-l-2 border-sidebar-border ml-5">
+              {item.children?.map(child => renderMenuItem(child, true))}
+            </div>
+          </CollapsibleContent>
+        </Collapsible>
+      );
+    }
+
+    const button = (
+      <button
+        onClick={() => onNavigate(item.id)}
+        className={cn(
+          'w-full flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium transition-colors',
+          'text-sidebar-foreground/70 hover:text-sidebar-foreground hover:bg-sidebar-accent',
+          isActive && 'bg-sidebar-accent text-sidebar-foreground',
+          isChild && 'py-1.5 text-xs',
+          isCollapsed && 'justify-center px-0'
+        )}
+      >
+        <Icon className={cn(
+          "shrink-0", 
+          isActive && "text-primary",
+          isChild ? "w-4 h-4" : "w-5 h-5"
+        )} />
+        <span className={cn(
+          "transition-all duration-300 whitespace-nowrap flex-1 text-left",
+          isCollapsed ? "w-0 opacity-0 hidden" : "w-auto opacity-100"
+        )}>
+          {item.label}
+        </span>
+      </button>
+    );
+
+    if (isCollapsed && !isChild) {
+      return (
+        <Tooltip key={item.id}>
+          <TooltipTrigger asChild>
+            {button}
+          </TooltipTrigger>
+          <TooltipContent side="right" className="font-medium">
+            {item.label}
+          </TooltipContent>
+        </Tooltip>
+      );
+    }
+
+    return <div key={item.id}>{button}</div>;
   };
 
   return (
@@ -131,52 +321,7 @@ export function Sidebar({ currentPage, onNavigate }: SidebarProps) {
         {/* Navigation */}
         <nav className="flex-1 py-4 overflow-y-auto scrollbar-thin">
           <div className="space-y-1 px-2">
-            {menuItems.map((item) => {
-              const Icon = item.icon;
-              const isActive = currentPage === item.id;
-              
-              const button = (
-                <button
-                  key={item.id}
-                  onClick={() => onNavigate(item.id)}
-                  className={cn(
-                    'w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors',
-                    'text-sidebar-foreground/70 hover:text-sidebar-foreground hover:bg-sidebar-accent',
-                    isActive && 'bg-sidebar-accent text-sidebar-foreground',
-                    isCollapsed && 'justify-center px-0'
-                  )}
-                >
-                  <Icon className={cn("w-5 h-5 shrink-0", isActive && "text-primary")} />
-                  <span className={cn(
-                    "transition-all duration-300 whitespace-nowrap flex-1 text-left",
-                    isCollapsed ? "w-0 opacity-0 hidden" : "w-auto opacity-100"
-                  )}>
-                    {item.label}
-                  </span>
-                  {!isCollapsed && (
-                    <ChevronDown className={cn(
-                      "w-4 h-4 opacity-0 group-hover:opacity-50 transition-opacity",
-                      isActive && "opacity-50"
-                    )} />
-                  )}
-                </button>
-              );
-
-              if (isCollapsed) {
-                return (
-                  <Tooltip key={item.id}>
-                    <TooltipTrigger asChild>
-                      {button}
-                    </TooltipTrigger>
-                    <TooltipContent side="right" className="font-medium">
-                      {item.label}
-                    </TooltipContent>
-                  </Tooltip>
-                );
-              }
-
-              return button;
-            })}
+            {menuItems.map((item) => renderMenuItem(item))}
           </div>
         </nav>
 

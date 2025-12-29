@@ -17,6 +17,22 @@ import { PurchasesPage } from '@/components/pos/PurchasesPage';
 import { QuotesPage } from '@/components/pos/QuotesPage';
 import { CustomersPage } from '@/components/pos/CustomersPage';
 import { PaymentMethodsPage } from '@/components/pos/PaymentMethodsPage';
+import { CompanySettingsPage } from '@/components/pos/CompanySettingsPage';
+import { SellersPage } from '@/components/pos/SellersPage';
+import { CategoriesPage } from '@/components/pos/CategoriesPage';
+import { SalesHistoryPage } from '@/components/pos/SalesHistoryPage';
+import { ReturnsPage } from '@/components/pos/ReturnsPage';
+import { StockMovementsPage } from '@/components/pos/StockMovementsPage';
+import { InventoryPage } from '@/components/pos/InventoryPage';
+import { LabelsPage } from '@/components/pos/LabelsPage';
+import { CashManagementPage } from '@/components/pos/CashManagementPage';
+import { AccountsPayablePage } from '@/components/pos/AccountsPayablePage';
+import { AccountsReceivablePage } from '@/components/pos/AccountsReceivablePage';
+import { ChecksPage } from '@/components/pos/ChecksPage';
+import { BankAccountsPage } from '@/components/pos/BankAccountsPage';
+import { ProductSearchPage } from '@/components/pos/ProductSearchPage';
+import { OverdueCustomersPage } from '@/components/pos/OverdueCustomersPage';
+import { BirthdaysPage } from '@/components/pos/BirthdaysPage';
 import { useDashboardStats } from '@/hooks/useDashboardStats';
 
 const Index = () => {
@@ -54,11 +70,51 @@ const Index = () => {
       case 'audit':
         return <AuditPage />;
       case 'reports':
+      case 'reports-sales':
+      case 'reports-stock':
+      case 'reports-financial':
+      case 'reports-commissions':
+      case 'reports-dre':
         return <ReportsPage />;
       case 'users':
         return <UsersPage />;
       case 'settings':
         return <SettingsPage />;
+      // New pages
+      case 'company':
+        return <CompanySettingsPage />;
+      case 'sellers':
+        return <SellersPage />;
+      case 'categories':
+        return <CategoriesPage />;
+      case 'sales-history':
+        return <SalesHistoryPage />;
+      case 'returns':
+        return <ReturnsPage />;
+      case 'stock-movements':
+        return <StockMovementsPage />;
+      case 'inventory':
+        return <InventoryPage />;
+      case 'labels':
+        return <LabelsPage />;
+      case 'import-xml':
+        return <PurchasesPage />; // TODO: Create ImportXMLPage
+      case 'cash-management':
+        return <CashManagementPage />;
+      case 'accounts-payable':
+        return <AccountsPayablePage />;
+      case 'accounts-receivable':
+        return <AccountsReceivablePage />;
+      case 'checks':
+        return <ChecksPage />;
+      case 'bank-accounts':
+        return <BankAccountsPage />;
+      case 'product-search':
+        return <ProductSearchPage />;
+      case 'overdue-customers':
+        return <OverdueCustomersPage />;
+      case 'birthdays':
+        return <BirthdaysPage />;
       default:
         return <Dashboard stats={stats} onNavigate={setCurrentPage} />;
     }
