@@ -1,8 +1,6 @@
 import { useState } from 'react';
-import { Receipt, Calendar, DollarSign, TrendingUp, TrendingDown } from 'lucide-react';
+import { Receipt, Calendar, DollarSign, Wallet, CreditCard, Smartphone } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
 import { useCashRegister } from '@/hooks/useCashRegister';
 import { formatCurrency } from '@/lib/utils';
@@ -12,6 +10,7 @@ import { OpenRegisterModal } from './OpenRegisterModal';
 import { CloseRegisterModal } from './CloseRegisterModal';
 import { supabase } from '@/integrations/supabase/client';
 import { useQuery } from '@tanstack/react-query';
+import { ModernPageHeader, ModernStatCard, ModernCard, ModernEmptyState } from './common';
 
 export function CashManagementPage() {
   const { register, isOpen } = useCashRegister();
@@ -33,8 +32,8 @@ export function CashManagementPage() {
 
   const getStatusBadge = (status: string) => {
     return status === 'open' 
-      ? <Badge className="bg-green-100 text-green-800">Aberto</Badge>
-      : <Badge className="bg-gray-100 text-gray-800">Fechado</Badge>;
+      ? <Badge className="bg-emerald-500/10 text-emerald-600 border-emerald-500/20">Aberto</Badge>
+      : <Badge variant="secondary">Fechado</Badge>;
   };
 
   const todayRegisters = registers.filter(r => {
@@ -45,177 +44,163 @@ export function CashManagementPage() {
   const totalSalesToday = todayRegisters.reduce((sum, r) => sum + (r.total_sales || 0), 0);
 
   return (
-    <div className="p-6 space-y-6">
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-2xl font-bold text-foreground flex items-center gap-2">
-            <Receipt className="h-7 w-7" />
-            Gestão de Caixa
-          </h1>
-          <p className="text-muted-foreground">Controle de abertura e fechamento de caixa</p>
-        </div>
-        {isOpen ? (
-          <Button variant="destructive" onClick={() => setShowCloseModal(true)}>
-            Fechar Caixa
-          </Button>
-        ) : (
-          <Button onClick={() => setShowOpenModal(true)}>
-            Abrir Caixa
-          </Button>
-        )}
-      </div>
+    <div className="p-6 space-y-6 animate-fade-in h-full overflow-auto">
+      <ModernPageHeader
+        title="Gestão de Caixa"
+        subtitle="Controle de abertura e fechamento de caixa"
+        icon={Receipt}
+        actions={
+          isOpen ? (
+            <Button variant="destructive" onClick={() => setShowCloseModal(true)}>
+              Fechar Caixa
+            </Button>
+          ) : (
+            <Button onClick={() => setShowOpenModal(true)}>
+              Abrir Caixa
+            </Button>
+          )
+        }
+      />
 
       {/* Status atual do caixa */}
       {isOpen && register && (
-        <Card className="border-green-200 bg-green-50">
-          <CardHeader>
-            <CardTitle className="text-lg flex items-center gap-2 text-green-800">
-              <DollarSign className="h-5 w-5" />
-              Caixa Atual - #{register.number}
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="grid grid-cols-2 md:grid-cols-6 gap-4">
-              <div>
-                <p className="text-sm text-muted-foreground">Abertura</p>
-                <p className="font-medium">{format(new Date(register.openedAt), "dd/MM HH:mm", { locale: ptBR })}</p>
-              </div>
-              <div>
-                <p className="text-sm text-muted-foreground">Saldo Inicial</p>
-                <p className="font-medium">{formatCurrency(register.openingBalance)}</p>
-              </div>
-              <div>
-                <p className="text-sm text-muted-foreground">Total Vendas</p>
-                <p className="font-medium text-green-600">{formatCurrency(register.totalSales)}</p>
-              </div>
-              <div>
-                <p className="text-sm text-muted-foreground">Dinheiro</p>
-                <p className="font-medium">{formatCurrency(register.totalCash)}</p>
-              </div>
-              <div>
-                <p className="text-sm text-muted-foreground">Cartão</p>
-                <p className="font-medium">{formatCurrency(register.totalCredit + register.totalDebit)}</p>
-              </div>
-              <div>
-                <p className="text-sm text-muted-foreground">PIX</p>
-                <p className="font-medium">{formatCurrency(register.totalPix)}</p>
-              </div>
+        <ModernCard className="border-emerald-500/30 bg-gradient-to-br from-emerald-500/5 to-transparent">
+          <div className="flex items-center gap-3 mb-4">
+            <div className="w-10 h-10 rounded-lg bg-emerald-500/10 flex items-center justify-center">
+              <DollarSign className="h-5 w-5 text-emerald-500" />
             </div>
-          </CardContent>
-        </Card>
+            <div>
+              <h3 className="text-lg font-semibold text-emerald-600">Caixa Atual - #{register.number}</h3>
+              <p className="text-sm text-muted-foreground">Aberto às {format(new Date(register.openedAt), "HH:mm", { locale: ptBR })}</p>
+            </div>
+          </div>
+          <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
+            <div className="p-3 rounded-lg bg-background/50">
+              <p className="text-xs text-muted-foreground mb-1">Saldo Inicial</p>
+              <p className="font-semibold">{formatCurrency(register.openingBalance)}</p>
+            </div>
+            <div className="p-3 rounded-lg bg-background/50">
+              <p className="text-xs text-muted-foreground mb-1">Total Vendas</p>
+              <p className="font-semibold text-emerald-600">{formatCurrency(register.totalSales)}</p>
+            </div>
+            <div className="p-3 rounded-lg bg-background/50">
+              <p className="text-xs text-muted-foreground mb-1 flex items-center gap-1"><Wallet className="w-3 h-3" /> Dinheiro</p>
+              <p className="font-semibold">{formatCurrency(register.totalCash)}</p>
+            </div>
+            <div className="p-3 rounded-lg bg-background/50">
+              <p className="text-xs text-muted-foreground mb-1 flex items-center gap-1"><CreditCard className="w-3 h-3" /> Cartão</p>
+              <p className="font-semibold">{formatCurrency(register.totalCredit + register.totalDebit)}</p>
+            </div>
+            <div className="p-3 rounded-lg bg-background/50">
+              <p className="text-xs text-muted-foreground mb-1 flex items-center gap-1"><Smartphone className="w-3 h-3" /> PIX</p>
+              <p className="font-semibold">{formatCurrency(register.totalPix)}</p>
+            </div>
+          </div>
+        </ModernCard>
       )}
 
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-        <Card>
-          <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium text-muted-foreground">
-              Status Atual
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">
-              {isOpen ? (
-                <span className="text-green-600">Aberto</span>
-              ) : (
-                <span className="text-muted-foreground">Fechado</span>
-              )}
-            </div>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium text-muted-foreground">
-              Vendas Hoje
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold text-green-600">{formatCurrency(totalSalesToday)}</div>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium text-muted-foreground">
-              Caixas Hoje
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{todayRegisters.length}</div>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium text-muted-foreground">
-              Total Histórico
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{registers.length}</div>
-          </CardContent>
-        </Card>
+      {/* Stats */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+        <ModernStatCard
+          title="Status Atual"
+          value={isOpen ? 'Aberto' : 'Fechado'}
+          icon={Receipt}
+          variant={isOpen ? 'green' : 'blue'}
+        />
+        <ModernStatCard
+          title="Vendas Hoje"
+          value={formatCurrency(totalSalesToday)}
+          icon={DollarSign}
+          variant="green"
+        />
+        <ModernStatCard
+          title="Caixas Hoje"
+          value={todayRegisters.length}
+          icon={Receipt}
+          variant="amber"
+        />
+        <ModernStatCard
+          title="Total Histórico"
+          value={registers.length}
+          icon={Receipt}
+          variant="purple"
+        />
       </div>
 
-      <Card>
-        <CardHeader>
-          <CardTitle>Histórico de Caixas</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>Nº</TableHead>
-                <TableHead>Abertura</TableHead>
-                <TableHead>Fechamento</TableHead>
-                <TableHead className="text-right">Saldo Inicial</TableHead>
-                <TableHead className="text-right">Total Vendas</TableHead>
-                <TableHead className="text-right">Saldo Final</TableHead>
-                <TableHead className="text-right">Diferença</TableHead>
-                <TableHead className="text-center">Status</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
+      {/* History Table */}
+      <ModernCard noPadding>
+        <div className="p-4 border-b border-border">
+          <h3 className="font-semibold">Histórico de Caixas</h3>
+        </div>
+        <div className="overflow-x-auto">
+          <table className="w-full">
+            <thead>
+              <tr className="border-b border-border bg-muted/30">
+                <th className="text-left p-4 font-medium text-muted-foreground text-sm">Nº</th>
+                <th className="text-left p-4 font-medium text-muted-foreground text-sm">Abertura</th>
+                <th className="text-left p-4 font-medium text-muted-foreground text-sm">Fechamento</th>
+                <th className="text-right p-4 font-medium text-muted-foreground text-sm">Saldo Inicial</th>
+                <th className="text-right p-4 font-medium text-muted-foreground text-sm">Total Vendas</th>
+                <th className="text-right p-4 font-medium text-muted-foreground text-sm">Saldo Final</th>
+                <th className="text-right p-4 font-medium text-muted-foreground text-sm">Diferença</th>
+                <th className="text-center p-4 font-medium text-muted-foreground text-sm">Status</th>
+              </tr>
+            </thead>
+            <tbody>
               {registers.length === 0 ? (
-                <TableRow>
-                  <TableCell colSpan={8} className="text-center py-8 text-muted-foreground">
-                    Nenhum caixa registrado
-                  </TableCell>
-                </TableRow>
+                <tr>
+                  <td colSpan={8}>
+                    <ModernEmptyState
+                      icon={Receipt}
+                      title="Nenhum caixa registrado"
+                    />
+                  </td>
+                </tr>
               ) : (
-                registers.map((reg) => (
-                  <TableRow key={reg.id}>
-                    <TableCell className="font-mono font-medium">#{reg.number}</TableCell>
-                    <TableCell>
-                      <div className="flex items-center gap-2">
-                        <Calendar className="h-4 w-4 text-muted-foreground" />
-                        {format(new Date(reg.opened_at), "dd/MM/yyyy HH:mm", { locale: ptBR })}
+                registers.map((reg, index) => (
+                  <tr 
+                    key={reg.id} 
+                    className="border-b border-border/50 last:border-0 hover:bg-muted/30 transition-colors"
+                    style={{ animationDelay: `${index * 30}ms` }}
+                  >
+                    <td className="p-4">
+                      <span className="font-mono font-medium text-primary">#{reg.number}</span>
+                    </td>
+                    <td className="p-4">
+                      <div className="flex items-center gap-2 text-muted-foreground">
+                        <Calendar className="h-4 w-4" />
+                        <span className="text-sm">
+                          {format(new Date(reg.opened_at), "dd/MM/yyyy HH:mm", { locale: ptBR })}
+                        </span>
                       </div>
-                    </TableCell>
-                    <TableCell>
+                    </td>
+                    <td className="p-4 text-sm text-muted-foreground">
                       {reg.closed_at 
                         ? format(new Date(reg.closed_at), "dd/MM/yyyy HH:mm", { locale: ptBR })
                         : '-'}
-                    </TableCell>
-                    <TableCell className="text-right">{formatCurrency(reg.opening_balance)}</TableCell>
-                    <TableCell className="text-right text-green-600 font-medium">
+                    </td>
+                    <td className="p-4 text-right tabular-nums">{formatCurrency(reg.opening_balance)}</td>
+                    <td className="p-4 text-right tabular-nums font-medium text-emerald-600">
                       {formatCurrency(reg.total_sales)}
-                    </TableCell>
-                    <TableCell className="text-right">
+                    </td>
+                    <td className="p-4 text-right tabular-nums">
                       {reg.closing_balance !== null ? formatCurrency(reg.closing_balance) : '-'}
-                    </TableCell>
-                    <TableCell className={`text-right font-medium ${
+                    </td>
+                    <td className={`p-4 text-right tabular-nums font-medium ${
                       reg.difference === null ? '' : 
-                      reg.difference === 0 ? 'text-green-600' : 
+                      reg.difference === 0 ? 'text-emerald-600' : 
                       reg.difference > 0 ? 'text-blue-600' : 'text-red-600'
                     }`}>
                       {reg.difference !== null ? formatCurrency(reg.difference) : '-'}
-                    </TableCell>
-                    <TableCell className="text-center">{getStatusBadge(reg.status)}</TableCell>
-                  </TableRow>
+                    </td>
+                    <td className="p-4 text-center">{getStatusBadge(reg.status)}</td>
+                  </tr>
                 ))
               )}
-            </TableBody>
-          </Table>
-        </CardContent>
-      </Card>
+            </tbody>
+          </table>
+        </div>
+      </ModernCard>
 
       <OpenRegisterModal
         isOpen={showOpenModal}

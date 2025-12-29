@@ -1,15 +1,14 @@
 import { useState } from 'react';
-import { FolderTree, Plus, Search, Edit, Trash2, Package } from 'lucide-react';
+import { FolderTree, Plus, Edit, Trash2, Package } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
 import { Label } from '@/components/ui/label';
 import { supabase } from '@/integrations/supabase/client';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { toast } from 'sonner';
+import { ModernPageHeader, ModernStatCard, ModernSearchBar, ModernCard, ModernEmptyState } from './common';
 
 interface Category {
   id: string;
@@ -115,132 +114,123 @@ export function CategoriesPage() {
   ];
 
   return (
-    <div className="p-6 space-y-6">
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-2xl font-bold text-foreground flex items-center gap-2">
-            <FolderTree className="h-7 w-7" />
-            Grupos/Categorias
-          </h1>
-          <p className="text-muted-foreground">Organize seus produtos em categorias</p>
-        </div>
-        <Button onClick={() => { resetForm(); setIsModalOpen(true); }}>
-          <Plus className="h-4 w-4 mr-2" />
-          Nova Categoria
-        </Button>
+    <div className="p-6 space-y-6 animate-fade-in h-full overflow-auto">
+      <ModernPageHeader
+        title="Grupos/Categorias"
+        subtitle="Organize seus produtos em categorias"
+        icon={FolderTree}
+        actions={
+          <Button onClick={() => { resetForm(); setIsModalOpen(true); }} className="gap-2">
+            <Plus className="h-4 w-4" />
+            Nova Categoria
+          </Button>
+        }
+      />
+
+      {/* Stats */}
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+        <ModernStatCard
+          title="Total de Categorias"
+          value={categories.length}
+          icon={FolderTree}
+          variant="blue"
+        />
+        <ModernStatCard
+          title="Categorias Ativas"
+          value={categories.filter(c => c.is_active).length}
+          icon={FolderTree}
+          variant="green"
+        />
+        <ModernStatCard
+          title="Categorias Inativas"
+          value={categories.filter(c => !c.is_active).length}
+          icon={FolderTree}
+          variant="amber"
+        />
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-        <Card>
-          <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium text-muted-foreground">
-              Total de Categorias
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{categories.length}</div>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium text-muted-foreground">
-              Categorias Ativas
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold text-green-600">
-              {categories.filter(c => c.is_active).length}
-            </div>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium text-muted-foreground">
-              Categorias Inativas
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold text-muted-foreground">
-              {categories.filter(c => !c.is_active).length}
-            </div>
-          </CardContent>
-        </Card>
-      </div>
+      {/* Search */}
+      <ModernSearchBar
+        value={search}
+        onChange={setSearch}
+        placeholder="Buscar categoria..."
+        className="max-w-md"
+      />
 
-      <Card>
-        <CardContent className="pt-6">
-          <div className="flex items-center gap-4 mb-4">
-            <div className="relative flex-1 max-w-sm">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-              <Input
-                placeholder="Buscar categoria..."
-                value={search}
-                onChange={(e) => setSearch(e.target.value)}
-                className="pl-10"
-              />
-            </div>
-          </div>
-
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>Cor</TableHead>
-                <TableHead>Nome</TableHead>
-                <TableHead className="text-center">Ordem</TableHead>
-                <TableHead className="text-center">Status</TableHead>
-                <TableHead className="text-right">Ações</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
+      {/* Table */}
+      <ModernCard noPadding>
+        <div className="overflow-x-auto">
+          <table className="w-full">
+            <thead>
+              <tr className="border-b border-border bg-muted/30">
+                <th className="text-left p-4 font-medium text-muted-foreground text-sm">Cor</th>
+                <th className="text-left p-4 font-medium text-muted-foreground text-sm">Nome</th>
+                <th className="text-center p-4 font-medium text-muted-foreground text-sm">Ordem</th>
+                <th className="text-center p-4 font-medium text-muted-foreground text-sm">Status</th>
+                <th className="text-right p-4 font-medium text-muted-foreground text-sm">Ações</th>
+              </tr>
+            </thead>
+            <tbody>
               {isLoading ? (
-                <TableRow>
-                  <TableCell colSpan={5} className="text-center py-8">
+                <tr>
+                  <td colSpan={5} className="text-center py-8 text-muted-foreground">
                     Carregando...
-                  </TableCell>
-                </TableRow>
+                  </td>
+                </tr>
               ) : filtered.length === 0 ? (
-                <TableRow>
-                  <TableCell colSpan={5} className="text-center py-8 text-muted-foreground">
-                    Nenhuma categoria encontrada
-                  </TableCell>
-                </TableRow>
+                <tr>
+                  <td colSpan={5}>
+                    <ModernEmptyState
+                      icon={FolderTree}
+                      title="Nenhuma categoria encontrada"
+                    />
+                  </td>
+                </tr>
               ) : (
-                filtered.map((category) => (
-                  <TableRow key={category.id}>
-                    <TableCell>
-                      <div className={`w-8 h-8 rounded-lg ${category.color} flex items-center justify-center`}>
-                        <Package className="h-4 w-4 text-white" />
+                filtered.map((category, index) => (
+                  <tr 
+                    key={category.id} 
+                    className="border-b border-border/50 last:border-0 hover:bg-muted/30 transition-colors"
+                    style={{ animationDelay: `${index * 30}ms` }}
+                  >
+                    <td className="p-4">
+                      <div className={`w-10 h-10 rounded-lg ${category.color} flex items-center justify-center shadow-sm`}>
+                        <Package className="h-5 w-5 text-white" />
                       </div>
-                    </TableCell>
-                    <TableCell className="font-medium">{category.name}</TableCell>
-                    <TableCell className="text-center">{category.sort_order}</TableCell>
-                    <TableCell className="text-center">
-                      <Badge variant={category.is_active ? "default" : "secondary"}>
-                        {category.is_active ? 'Ativa' : 'Inativa'}
-                      </Badge>
-                    </TableCell>
-                    <TableCell className="text-right">
-                      <div className="flex items-center justify-end gap-2">
-                        <Button variant="ghost" size="icon" onClick={() => handleEdit(category)}>
+                    </td>
+                    <td className="p-4 font-medium">{category.name}</td>
+                    <td className="p-4 text-center">
+                      <Badge variant="secondary" className="font-mono">{category.sort_order}</Badge>
+                    </td>
+                    <td className="p-4 text-center">
+                      {category.is_active ? (
+                        <Badge className="bg-emerald-500/10 text-emerald-600 border-emerald-500/20">Ativa</Badge>
+                      ) : (
+                        <Badge variant="secondary">Inativa</Badge>
+                      )}
+                    </td>
+                    <td className="p-4 text-right">
+                      <div className="flex items-center justify-end gap-1">
+                        <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => handleEdit(category)}>
                           <Edit className="h-4 w-4" />
                         </Button>
                         <Button 
                           variant="ghost" 
                           size="icon" 
-                          className="text-destructive"
+                          className="h-8 w-8 text-destructive hover:text-destructive"
                           onClick={() => deleteMutation.mutate(category.id)}
                         >
                           <Trash2 className="h-4 w-4" />
                         </Button>
                       </div>
-                    </TableCell>
-                  </TableRow>
+                    </td>
+                  </tr>
                 ))
               )}
-            </TableBody>
-          </Table>
-        </CardContent>
-      </Card>
+            </tbody>
+          </table>
+        </div>
+      </ModernCard>
 
       <Dialog open={isModalOpen} onOpenChange={setIsModalOpen}>
         <DialogContent>
@@ -267,8 +257,8 @@ export function CategoriesPage() {
                     key={color.value}
                     type="button"
                     onClick={() => setFormData({ ...formData, color: color.value })}
-                    className={`w-8 h-8 rounded-lg ${color.value} transition-all ${
-                      formData.color === color.value ? 'ring-2 ring-offset-2 ring-primary' : ''
+                    className={`w-10 h-10 rounded-lg ${color.value} transition-all ${
+                      formData.color === color.value ? 'ring-2 ring-offset-2 ring-primary scale-110' : 'hover:scale-105'
                     }`}
                     title={color.label}
                   />

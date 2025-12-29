@@ -1,21 +1,18 @@
 import { useState } from 'react';
-import { Plus, Search, UserCircle, Edit, Trash2, Phone, Mail, MapPin, CreditCard, Calendar, Lock, Unlock, Gift, History } from 'lucide-react';
+import { Plus, UserCircle, Edit, Trash2, Lock, Unlock, Gift, History, Users } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
 import { Label } from '@/components/ui/label';
+import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Textarea } from '@/components/ui/textarea';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { toast } from 'sonner';
 import { useCustomers } from '@/hooks/useCustomers';
 import { useLoyalty } from '@/hooks/useLoyalty';
-import type { DbCustomer } from '@/hooks/useCustomers';
-import { format, differenceInDays } from 'date-fns';
-import { ptBR } from 'date-fns/locale';
+import { ModernPageHeader, ModernStatCard, ModernSearchBar, ModernCard, ModernEmptyState } from './common';
+import { differenceInDays } from 'date-fns';
 
 export function CustomersPage() {
   const { customers, createCustomer, updateCustomer, deleteCustomer, isLoading } = useCustomers();
@@ -95,31 +92,10 @@ export function CustomersPage() {
     } else {
       setEditingId(null);
       setFormData({
-        name: '',
-        cpf: '',
-        rg: '',
-        cnpj: '',
-        ie: '',
-        fantasy_name: '',
-        email: '',
-        phone: '',
-        phone2: '',
-        birth_date: '',
-        gender: '',
-        profession: '',
-        workplace: '',
-        income: 0,
-        address: '',
-        number: '',
-        complement: '',
-        neighborhood: '',
-        city: '',
-        state: '',
-        cep: '',
-        credit_limit: 0,
-        notes: '',
-        is_blocked: false,
-        block_reason: '',
+        name: '', cpf: '', rg: '', cnpj: '', ie: '', fantasy_name: '', email: '',
+        phone: '', phone2: '', birth_date: '', gender: '', profession: '', workplace: '',
+        income: 0, address: '', number: '', complement: '', neighborhood: '', city: '',
+        state: '', cep: '', credit_limit: 0, notes: '', is_blocked: false, block_reason: '',
       });
     }
     setIsModalOpen(true);
@@ -201,149 +177,146 @@ export function CustomersPage() {
   ];
 
   return (
-    <div className="p-6 space-y-6">
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-2xl font-bold text-foreground">Clientes</h1>
-          <p className="text-muted-foreground">Gerencie sua base de clientes</p>
-        </div>
-        <Button onClick={() => handleOpenModal()}>
-          <Plus className="w-4 h-4 mr-2" />
-          Novo Cliente
-        </Button>
-      </div>
+    <div className="p-6 space-y-6 animate-fade-in h-full overflow-auto">
+      <ModernPageHeader
+        title="Clientes"
+        subtitle="Gerencie sua base de clientes"
+        icon={Users}
+        actions={
+          <Button onClick={() => handleOpenModal()} className="gap-2">
+            <Plus className="w-4 h-4" />
+            Novo Cliente
+          </Button>
+        }
+      />
 
-      <div className="relative max-w-md">
-        <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-        <Input
-          placeholder="Buscar por nome, CPF, telefone ou email..."
-          value={search}
-          onChange={(e) => setSearch(e.target.value)}
-          className="pl-10"
+      {/* Stats */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+        <ModernStatCard
+          title="Total de Clientes"
+          value={customers.length}
+          icon={Users}
+          variant="blue"
+        />
+        <ModernStatCard
+          title="Ativos"
+          value={customers.filter(c => c.is_active && !c.is_blocked).length}
+          icon={Users}
+          variant="green"
+        />
+        <ModernStatCard
+          title="Bloqueados"
+          value={customers.filter(c => c.is_blocked).length}
+          icon={Lock}
+          variant="red"
+        />
+        <ModernStatCard
+          title="Aniversariantes"
+          value={customers.filter(c => isUpcomingBirthday(c.birth_date)).length}
+          icon={Gift}
+          variant="purple"
         />
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-        <Card>
-          <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium text-muted-foreground">Total de Clientes</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <p className="text-2xl font-bold">{customers.length}</p>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium text-muted-foreground">Ativos</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <p className="text-2xl font-bold text-success">{customers.filter(c => c.is_active && !c.is_blocked).length}</p>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium text-muted-foreground">Bloqueados</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <p className="text-2xl font-bold text-destructive">{customers.filter(c => c.is_blocked).length}</p>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium text-muted-foreground flex items-center gap-2">
-              <Gift className="w-4 h-4" />
-              Aniversariantes
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <p className="text-2xl font-bold text-primary">
-              {customers.filter(c => isUpcomingBirthday(c.birth_date)).length}
-            </p>
-          </CardContent>
-        </Card>
-      </div>
+      {/* Search */}
+      <ModernSearchBar
+        value={search}
+        onChange={setSearch}
+        placeholder="Buscar por nome, CPF, telefone ou email..."
+        className="max-w-md"
+      />
 
-      <Card>
-        <CardContent className="p-0">
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>Nome</TableHead>
-                <TableHead>CPF/CNPJ</TableHead>
-                <TableHead>Telefone</TableHead>
-                <TableHead>Email</TableHead>
-                <TableHead>Limite</TableHead>
-                <TableHead>Pontos</TableHead>
-                <TableHead>Status</TableHead>
-                <TableHead className="text-right">Ações</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {filteredCustomers.map((customer) => {
+      {/* Table */}
+      <ModernCard noPadding>
+        <div className="overflow-x-auto">
+          <table className="w-full">
+            <thead>
+              <tr className="border-b border-border bg-muted/30">
+                <th className="text-left p-4 font-medium text-muted-foreground text-sm">Nome</th>
+                <th className="text-left p-4 font-medium text-muted-foreground text-sm">CPF/CNPJ</th>
+                <th className="text-left p-4 font-medium text-muted-foreground text-sm">Telefone</th>
+                <th className="text-left p-4 font-medium text-muted-foreground text-sm">Email</th>
+                <th className="text-right p-4 font-medium text-muted-foreground text-sm">Limite</th>
+                <th className="text-center p-4 font-medium text-muted-foreground text-sm">Pontos</th>
+                <th className="text-center p-4 font-medium text-muted-foreground text-sm">Status</th>
+                <th className="text-right p-4 font-medium text-muted-foreground text-sm">Ações</th>
+              </tr>
+            </thead>
+            <tbody>
+              {filteredCustomers.map((customer, index) => {
                 const points = getCustomerPoints(customer.id);
                 return (
-                  <TableRow key={customer.id}>
-                    <TableCell>
-                      <div className="flex items-center gap-2">
-                        <span className="font-medium">{customer.name}</span>
-                        {isUpcomingBirthday(customer.birth_date) && (
-                          <Gift className="w-4 h-4 text-primary" />
-                        )}
+                  <tr 
+                    key={customer.id} 
+                    className="border-b border-border/50 last:border-0 hover:bg-muted/30 transition-colors"
+                    style={{ animationDelay: `${index * 30}ms` }}
+                  >
+                    <td className="p-4">
+                      <div className="flex items-center gap-3">
+                        <div className="w-9 h-9 rounded-full bg-gradient-to-br from-primary/20 to-primary/5 flex items-center justify-center">
+                          <UserCircle className="w-5 h-5 text-primary" />
+                        </div>
+                        <div className="flex items-center gap-2">
+                          <span className="font-medium">{customer.name}</span>
+                          {isUpcomingBirthday(customer.birth_date) && (
+                            <Gift className="w-4 h-4 text-purple-500" />
+                          )}
+                        </div>
                       </div>
-                    </TableCell>
-                    <TableCell>{customer.cpf || customer.cnpj || '-'}</TableCell>
-                    <TableCell>{customer.phone || '-'}</TableCell>
-                    <TableCell>{customer.email || '-'}</TableCell>
-                    <TableCell>R$ {customer.credit_limit.toFixed(2)}</TableCell>
-                    <TableCell>
+                    </td>
+                    <td className="p-4 text-muted-foreground font-mono text-sm">{customer.cpf || customer.cnpj || '-'}</td>
+                    <td className="p-4 text-muted-foreground">{customer.phone || '-'}</td>
+                    <td className="p-4 text-muted-foreground">{customer.email || '-'}</td>
+                    <td className="p-4 text-right font-medium tabular-nums">R$ {customer.credit_limit.toFixed(2)}</td>
+                    <td className="p-4 text-center">
                       {points ? (
-                        <Badge variant="secondary">{points.available_points} pts</Badge>
+                        <Badge variant="secondary" className="font-mono">{points.available_points} pts</Badge>
                       ) : '-'}
-                    </TableCell>
-                    <TableCell>
+                    </td>
+                    <td className="p-4 text-center">
                       {customer.is_blocked ? (
                         <Badge variant="destructive">Bloqueado</Badge>
                       ) : customer.is_active ? (
-                        <Badge variant="default">Ativo</Badge>
+                        <Badge className="bg-emerald-500/10 text-emerald-600 border-emerald-500/20">Ativo</Badge>
                       ) : (
                         <Badge variant="secondary">Inativo</Badge>
                       )}
-                    </TableCell>
-                    <TableCell className="text-right">
+                    </td>
+                    <td className="p-4">
                       <div className="flex gap-1 justify-end">
-                        <Button variant="ghost" size="icon" onClick={() => handleViewCustomer(customer)}>
+                        <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => handleViewCustomer(customer)}>
                           <History className="w-4 h-4" />
                         </Button>
-                        <Button variant="ghost" size="icon" onClick={() => handleOpenModal(customer)}>
+                        <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => handleOpenModal(customer)}>
                           <Edit className="w-4 h-4" />
                         </Button>
-                        <Button variant="ghost" size="icon" onClick={() => handleToggleBlock(customer)}>
+                        <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => handleToggleBlock(customer)}>
                           {customer.is_blocked ? (
-                            <Unlock className="w-4 h-4 text-success" />
+                            <Unlock className="w-4 h-4 text-emerald-500" />
                           ) : (
-                            <Lock className="w-4 h-4 text-warning" />
+                            <Lock className="w-4 h-4 text-amber-500" />
                           )}
                         </Button>
-                        <Button variant="ghost" size="icon" onClick={() => handleDelete(customer.id)}>
-                          <Trash2 className="w-4 h-4 text-destructive" />
+                        <Button variant="ghost" size="icon" className="h-8 w-8 text-destructive hover:text-destructive" onClick={() => handleDelete(customer.id)}>
+                          <Trash2 className="w-4 h-4" />
                         </Button>
                       </div>
-                    </TableCell>
-                  </TableRow>
+                    </td>
+                  </tr>
                 );
               })}
-              {filteredCustomers.length === 0 && (
-                <TableRow>
-                  <TableCell colSpan={8} className="text-center py-8 text-muted-foreground">
-                    <UserCircle className="w-12 h-12 mx-auto mb-2 opacity-50" />
-                    <p>Nenhum cliente encontrado</p>
-                  </TableCell>
-                </TableRow>
-              )}
-            </TableBody>
-          </Table>
-        </CardContent>
-      </Card>
+            </tbody>
+          </table>
+        </div>
+
+        {filteredCustomers.length === 0 && (
+          <ModernEmptyState
+            icon={UserCircle}
+            title="Nenhum cliente encontrado"
+            description="Adicione um novo cliente para começar"
+          />
+        )}
+      </ModernCard>
 
       {/* Create/Edit Customer Modal */}
       <Dialog open={isModalOpen} onOpenChange={setIsModalOpen}>
@@ -360,7 +333,7 @@ export function CustomersPage() {
               <TabsTrigger value="other">Outros</TabsTrigger>
             </TabsList>
             
-            <TabsContent value="personal" className="space-y-4">
+            <TabsContent value="personal" className="space-y-4 mt-4">
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-2 col-span-2">
                   <Label>Nome *</Label>
@@ -386,28 +359,6 @@ export function CustomersPage() {
                   />
                 </div>
                 <div className="space-y-2">
-                  <Label>CNPJ</Label>
-                  <Input 
-                    value={formData.cnpj} 
-                    onChange={(e) => setFormData({...formData, cnpj: e.target.value})} 
-                    placeholder="00.000.000/0001-00"
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label>Inscrição Estadual</Label>
-                  <Input 
-                    value={formData.ie} 
-                    onChange={(e) => setFormData({...formData, ie: e.target.value})} 
-                  />
-                </div>
-                <div className="space-y-2 col-span-2">
-                  <Label>Nome Fantasia</Label>
-                  <Input 
-                    value={formData.fantasy_name} 
-                    onChange={(e) => setFormData({...formData, fantasy_name: e.target.value})} 
-                  />
-                </div>
-                <div className="space-y-2">
                   <Label>Email</Label>
                   <Input 
                     type="email"
@@ -421,13 +372,6 @@ export function CustomersPage() {
                     value={formData.phone} 
                     onChange={(e) => setFormData({...formData, phone: e.target.value})} 
                     placeholder="(00) 00000-0000"
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label>Telefone 2</Label>
-                  <Input 
-                    value={formData.phone2} 
-                    onChange={(e) => setFormData({...formData, phone2: e.target.value})} 
                   />
                 </div>
                 <div className="space-y-2">
@@ -454,14 +398,13 @@ export function CustomersPage() {
               </div>
             </TabsContent>
             
-            <TabsContent value="address" className="space-y-4">
+            <TabsContent value="address" className="space-y-4 mt-4">
               <div className="grid grid-cols-3 gap-4">
                 <div className="space-y-2">
                   <Label>CEP</Label>
                   <Input 
                     value={formData.cep} 
                     onChange={(e) => setFormData({...formData, cep: e.target.value})} 
-                    placeholder="00000-000"
                   />
                 </div>
                 <div className="space-y-2 col-span-2">
@@ -478,7 +421,7 @@ export function CustomersPage() {
                     onChange={(e) => setFormData({...formData, number: e.target.value})} 
                   />
                 </div>
-                <div className="space-y-2 col-span-2">
+                <div className="space-y-2">
                   <Label>Complemento</Label>
                   <Input 
                     value={formData.complement} 
@@ -506,8 +449,8 @@ export function CustomersPage() {
                       <SelectValue placeholder="UF" />
                     </SelectTrigger>
                     <SelectContent>
-                      {states.map(state => (
-                        <SelectItem key={state} value={state}>{state}</SelectItem>
+                      {states.map(uf => (
+                        <SelectItem key={uf} value={uf}>{uf}</SelectItem>
                       ))}
                     </SelectContent>
                   </Select>
@@ -515,150 +458,47 @@ export function CustomersPage() {
               </div>
             </TabsContent>
             
-            <TabsContent value="financial" className="space-y-4">
+            <TabsContent value="financial" className="space-y-4 mt-4">
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-2">
-                  <Label>Limite de Crédito (R$)</Label>
+                  <Label>Limite de Crédito</Label>
                   <Input 
                     type="number"
-                    min={0}
-                    step={0.01}
                     value={formData.credit_limit} 
-                    onChange={(e) => setFormData({...formData, credit_limit: Number(e.target.value)})} 
+                    onChange={(e) => setFormData({...formData, credit_limit: parseFloat(e.target.value) || 0})} 
                   />
                 </div>
                 <div className="space-y-2">
-                  <Label>Renda Mensal (R$)</Label>
+                  <Label>Renda</Label>
                   <Input 
                     type="number"
-                    min={0}
-                    step={0.01}
                     value={formData.income} 
-                    onChange={(e) => setFormData({...formData, income: Number(e.target.value)})} 
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label>Profissão</Label>
-                  <Input 
-                    value={formData.profession} 
-                    onChange={(e) => setFormData({...formData, profession: e.target.value})} 
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label>Local de Trabalho</Label>
-                  <Input 
-                    value={formData.workplace} 
-                    onChange={(e) => setFormData({...formData, workplace: e.target.value})} 
+                    onChange={(e) => setFormData({...formData, income: parseFloat(e.target.value) || 0})} 
                   />
                 </div>
               </div>
             </TabsContent>
             
-            <TabsContent value="other" className="space-y-4">
+            <TabsContent value="other" className="space-y-4 mt-4">
               <div className="space-y-2">
                 <Label>Observações</Label>
                 <Textarea 
                   value={formData.notes} 
-                  onChange={(e) => setFormData({...formData, notes: e.target.value})}
-                  placeholder="Observações sobre o cliente..."
+                  onChange={(e) => setFormData({...formData, notes: e.target.value})} 
                   rows={4}
                 />
               </div>
             </TabsContent>
           </Tabs>
 
-          <DialogFooter>
-            <Button variant="outline" onClick={() => setIsModalOpen(false)}>Cancelar</Button>
-            <Button onClick={handleSubmit} disabled={isLoading}>
+          <DialogFooter className="mt-4">
+            <Button variant="outline" onClick={() => setIsModalOpen(false)}>
+              Cancelar
+            </Button>
+            <Button onClick={handleSubmit}>
               {editingId ? 'Salvar' : 'Cadastrar'}
             </Button>
           </DialogFooter>
-        </DialogContent>
-      </Dialog>
-
-      {/* View Customer Modal */}
-      <Dialog open={isViewModalOpen} onOpenChange={setIsViewModalOpen}>
-        <DialogContent className="max-w-2xl">
-          <DialogHeader>
-            <DialogTitle className="flex items-center gap-2">
-              <UserCircle className="w-5 h-5" />
-              {selectedCustomer?.name}
-            </DialogTitle>
-          </DialogHeader>
-          
-          {selectedCustomer && (
-            <div className="space-y-4">
-              <div className="grid grid-cols-2 gap-4">
-                <div className="flex items-center gap-2">
-                  <Phone className="w-4 h-4 text-muted-foreground" />
-                  <span>{selectedCustomer.phone || 'Não informado'}</span>
-                </div>
-                <div className="flex items-center gap-2">
-                  <Mail className="w-4 h-4 text-muted-foreground" />
-                  <span>{selectedCustomer.email || 'Não informado'}</span>
-                </div>
-                <div className="flex items-center gap-2 col-span-2">
-                  <MapPin className="w-4 h-4 text-muted-foreground" />
-                  <span>
-                    {selectedCustomer.address 
-                      ? `${selectedCustomer.address}, ${selectedCustomer.number || 's/n'} - ${selectedCustomer.neighborhood || ''}, ${selectedCustomer.city || ''} - ${selectedCustomer.state || ''}`
-                      : 'Endereço não informado'}
-                  </span>
-                </div>
-              </div>
-
-              <div className="grid grid-cols-3 gap-4 pt-4 border-t">
-                <Card>
-                  <CardHeader className="pb-2">
-                    <CardTitle className="text-sm font-medium text-muted-foreground flex items-center gap-2">
-                      <CreditCard className="w-4 h-4" />
-                      Limite
-                    </CardTitle>
-                  </CardHeader>
-                  <CardContent>
-                    <p className="text-xl font-bold">R$ {selectedCustomer.credit_limit.toFixed(2)}</p>
-                  </CardContent>
-                </Card>
-                <Card>
-                  <CardHeader className="pb-2">
-                    <CardTitle className="text-sm font-medium text-muted-foreground">Débito</CardTitle>
-                  </CardHeader>
-                  <CardContent>
-                    <p className="text-xl font-bold text-destructive">R$ {selectedCustomer.current_debt.toFixed(2)}</p>
-                  </CardContent>
-                </Card>
-                <Card>
-                  <CardHeader className="pb-2">
-                    <CardTitle className="text-sm font-medium text-muted-foreground flex items-center gap-2">
-                      <Gift className="w-4 h-4" />
-                      Pontos
-                    </CardTitle>
-                  </CardHeader>
-                  <CardContent>
-                    <p className="text-xl font-bold text-primary">
-                      {getCustomerPoints(selectedCustomer.id)?.available_points || 0}
-                    </p>
-                  </CardContent>
-                </Card>
-              </div>
-
-              {selectedCustomer.birth_date && (
-                <div className="flex items-center gap-2 bg-muted p-3 rounded-lg">
-                  <Calendar className="w-4 h-4 text-muted-foreground" />
-                  <span>Aniversário: {format(new Date(selectedCustomer.birth_date), 'dd/MM', { locale: ptBR })}</span>
-                  {isUpcomingBirthday(selectedCustomer.birth_date) && (
-                    <Badge variant="default" className="ml-auto">Próximo!</Badge>
-                  )}
-                </div>
-              )}
-
-              {selectedCustomer.notes && (
-                <div className="bg-muted p-3 rounded-lg">
-                  <p className="text-sm text-muted-foreground">{selectedCustomer.notes}</p>
-                </div>
-              )}
-            </div>
-          )}
         </DialogContent>
       </Dialog>
     </div>

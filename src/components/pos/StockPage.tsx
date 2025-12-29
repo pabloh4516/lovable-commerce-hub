@@ -1,17 +1,15 @@
 import { useState } from 'react';
-import { Plus, Search, Filter, ArrowUpDown, Package, AlertTriangle, TrendingUp, TrendingDown } from 'lucide-react';
+import { Plus, Filter, ArrowUpDown, Package, AlertTriangle, TrendingUp, TrendingDown, Boxes } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { useProducts, DbProduct } from '@/hooks/useProducts';
 import { useStockMovements } from '@/hooks/useStockMovements';
 import { useStoreContext } from '@/contexts/StoreContext';
 import { StockMovementModal } from './StockMovementModal';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
+import { ModernPageHeader, ModernStatCard, ModernSearchBar, ModernCard, ModernEmptyState } from './common';
 
 export function StockPage() {
   const { currentStore } = useStoreContext();
@@ -61,105 +59,78 @@ export function StockPage() {
 
   const getMovementTypeColor = (type: string) => {
     if (['entrada', 'transferencia_entrada', 'devolucao'].includes(type)) {
-      return 'bg-emerald-500/10 text-emerald-500';
+      return 'bg-emerald-500/10 text-emerald-600 border-emerald-500/20';
     }
     if (['saida', 'transferencia_saida', 'venda', 'perda'].includes(type)) {
-      return 'bg-red-500/10 text-red-500';
+      return 'bg-red-500/10 text-red-600 border-red-500/20';
     }
-    return 'bg-blue-500/10 text-blue-500';
+    return 'bg-blue-500/10 text-blue-600 border-blue-500/20';
   };
 
   return (
-    <div className="h-full flex flex-col bg-background">
+    <div className="h-full flex flex-col bg-background animate-fade-in">
       {/* Header */}
       <div className="p-6 border-b border-border">
-        <div className="flex items-center justify-between mb-6">
-          <div>
-            <h1 className="text-2xl font-bold">Gestão de Estoque</h1>
-            <p className="text-muted-foreground">Controle de estoque e movimentações</p>
-          </div>
-          <Button onClick={() => handleAddMovement()}>
-            <Plus className="h-4 w-4 mr-2" />
-            Nova Movimentação
-          </Button>
-        </div>
+        <ModernPageHeader
+          title="Gestão de Estoque"
+          subtitle="Controle de estoque e movimentações"
+          icon={Boxes}
+          actions={
+            <Button onClick={() => handleAddMovement()} className="gap-2">
+              <Plus className="h-4 w-4" />
+              Nova Movimentação
+            </Button>
+          }
+        />
 
         {/* Stats */}
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-          <Card>
-            <CardContent className="p-4">
-              <div className="flex items-center gap-3">
-                <div className="p-2 rounded-lg bg-primary/10">
-                  <Package className="h-5 w-5 text-primary" />
-                </div>
-                <div>
-                  <p className="text-2xl font-bold">{totalProducts}</p>
-                  <p className="text-sm text-muted-foreground">Produtos</p>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-          <Card>
-            <CardContent className="p-4">
-              <div className="flex items-center gap-3">
-                <div className="p-2 rounded-lg bg-amber-500/10">
-                  <AlertTriangle className="h-5 w-5 text-amber-500" />
-                </div>
-                <div>
-                  <p className="text-2xl font-bold">{lowStockProducts}</p>
-                  <p className="text-sm text-muted-foreground">Estoque Baixo</p>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-          <Card>
-            <CardContent className="p-4">
-              <div className="flex items-center gap-3">
-                <div className="p-2 rounded-lg bg-red-500/10">
-                  <TrendingDown className="h-5 w-5 text-red-500" />
-                </div>
-                <div>
-                  <p className="text-2xl font-bold">{outOfStockProducts}</p>
-                  <p className="text-sm text-muted-foreground">Sem Estoque</p>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-          <Card>
-            <CardContent className="p-4">
-              <div className="flex items-center gap-3">
-                <div className="p-2 rounded-lg bg-emerald-500/10">
-                  <TrendingUp className="h-5 w-5 text-emerald-500" />
-                </div>
-                <div>
-                  <p className="text-2xl font-bold">{movements.length}</p>
-                  <p className="text-sm text-muted-foreground">Movimentações</p>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mt-6">
+          <ModernStatCard
+            title="Produtos"
+            value={totalProducts}
+            icon={Package}
+            variant="blue"
+          />
+          <ModernStatCard
+            title="Estoque Baixo"
+            value={lowStockProducts}
+            icon={AlertTriangle}
+            variant="amber"
+          />
+          <ModernStatCard
+            title="Sem Estoque"
+            value={outOfStockProducts}
+            icon={TrendingDown}
+            variant="red"
+          />
+          <ModernStatCard
+            title="Movimentações"
+            value={movements.length}
+            icon={TrendingUp}
+            variant="green"
+          />
         </div>
       </div>
 
       {/* Tabs */}
       <div className="px-6 pt-4">
-        <div className="flex gap-2 border-b border-border">
+        <div className="flex gap-1 p-1 bg-muted/50 rounded-lg w-fit">
           <button
             onClick={() => setActiveTab('products')}
-            className={`px-4 py-2 text-sm font-medium border-b-2 transition-colors ${
+            className={`px-4 py-2 text-sm font-medium rounded-md transition-all ${
               activeTab === 'products' 
-                ? 'border-primary text-primary' 
-                : 'border-transparent text-muted-foreground hover:text-foreground'
+                ? 'bg-background text-foreground shadow-sm' 
+                : 'text-muted-foreground hover:text-foreground'
             }`}
           >
             Produtos
           </button>
           <button
             onClick={() => setActiveTab('movements')}
-            className={`px-4 py-2 text-sm font-medium border-b-2 transition-colors ${
+            className={`px-4 py-2 text-sm font-medium rounded-md transition-all ${
               activeTab === 'movements' 
-                ? 'border-primary text-primary' 
-                : 'border-transparent text-muted-foreground hover:text-foreground'
+                ? 'bg-background text-foreground shadow-sm' 
+                : 'text-muted-foreground hover:text-foreground'
             }`}
           >
             Movimentações
@@ -169,15 +140,12 @@ export function StockPage() {
 
       {/* Filters */}
       <div className="p-6 flex gap-4">
-        <div className="relative flex-1 max-w-md">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-          <Input
-            placeholder="Buscar produto..."
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-            className="pl-10"
-          />
-        </div>
+        <ModernSearchBar
+          value={searchTerm}
+          onChange={setSearchTerm}
+          placeholder="Buscar produto..."
+          className="flex-1 max-w-md"
+        />
         {activeTab === 'products' && (
           <Select value={filterType} onValueChange={setFilterType}>
             <SelectTrigger className="w-48">
@@ -196,130 +164,139 @@ export function StockPage() {
       {/* Content */}
       <div className="flex-1 overflow-auto px-6 pb-6">
         {activeTab === 'products' ? (
-          <Card>
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>Código</TableHead>
-                  <TableHead>Produto</TableHead>
-                  <TableHead className="text-right">Estoque</TableHead>
-                  <TableHead className="text-right">Mínimo</TableHead>
-                  <TableHead>Status</TableHead>
-                  <TableHead className="text-right">Ações</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
+          <ModernCard noPadding>
+            <table className="w-full">
+              <thead>
+                <tr className="border-b border-border bg-muted/30">
+                  <th className="text-left p-4 font-medium text-muted-foreground text-sm">Código</th>
+                  <th className="text-left p-4 font-medium text-muted-foreground text-sm">Produto</th>
+                  <th className="text-right p-4 font-medium text-muted-foreground text-sm">Estoque</th>
+                  <th className="text-right p-4 font-medium text-muted-foreground text-sm">Mínimo</th>
+                  <th className="text-left p-4 font-medium text-muted-foreground text-sm">Status</th>
+                  <th className="text-right p-4 font-medium text-muted-foreground text-sm">Ações</th>
+                </tr>
+              </thead>
+              <tbody>
                 {productsLoading ? (
-                  <TableRow>
-                    <TableCell colSpan={6} className="text-center py-8 text-muted-foreground">
+                  <tr>
+                    <td colSpan={6} className="text-center py-8 text-muted-foreground">
                       Carregando produtos...
-                    </TableCell>
-                  </TableRow>
+                    </td>
+                  </tr>
                 ) : filteredProducts.length === 0 ? (
-                  <TableRow>
-                    <TableCell colSpan={6} className="text-center py-8 text-muted-foreground">
-                      Nenhum produto encontrado
-                    </TableCell>
-                  </TableRow>
+                  <tr>
+                    <td colSpan={6}>
+                      <ModernEmptyState icon={Package} title="Nenhum produto encontrado" />
+                    </td>
+                  </tr>
                 ) : (
-                  filteredProducts.map((product) => (
-                    <TableRow key={product.id}>
-                      <TableCell className="font-mono text-sm">{product.code}</TableCell>
-                      <TableCell className="font-medium">{product.name}</TableCell>
-                      <TableCell className="text-right font-mono">
+                  filteredProducts.map((product, index) => (
+                    <tr 
+                      key={product.id} 
+                      className="border-b border-border/50 last:border-0 hover:bg-muted/30 transition-colors"
+                      style={{ animationDelay: `${index * 20}ms` }}
+                    >
+                      <td className="p-4 font-mono text-sm text-muted-foreground">{product.code}</td>
+                      <td className="p-4 font-medium">{product.name}</td>
+                      <td className="p-4 text-right font-mono tabular-nums">
                         {product.stock} {product.unit}
-                      </TableCell>
-                      <TableCell className="text-right font-mono text-muted-foreground">
+                      </td>
+                      <td className="p-4 text-right font-mono tabular-nums text-muted-foreground">
                         {product.min_stock} {product.unit}
-                      </TableCell>
-                      <TableCell>
+                      </td>
+                      <td className="p-4">
                         {product.stock === 0 ? (
                           <Badge variant="destructive">Sem Estoque</Badge>
                         ) : product.stock <= product.min_stock ? (
-                          <Badge variant="outline" className="border-amber-500 text-amber-500">
+                          <Badge className="bg-amber-500/10 text-amber-600 border-amber-500/20">
                             Estoque Baixo
                           </Badge>
                         ) : (
-                          <Badge variant="outline" className="border-emerald-500 text-emerald-500">
+                          <Badge className="bg-emerald-500/10 text-emerald-600 border-emerald-500/20">
                             Normal
                           </Badge>
                         )}
-                      </TableCell>
-                      <TableCell className="text-right">
+                      </td>
+                      <td className="p-4 text-right">
                         <Button 
                           variant="ghost" 
                           size="sm"
                           onClick={() => handleAddMovement(product)}
+                          className="gap-1"
                         >
-                          <ArrowUpDown className="h-4 w-4 mr-1" />
+                          <ArrowUpDown className="h-4 w-4" />
                           Movimentar
                         </Button>
-                      </TableCell>
-                    </TableRow>
+                      </td>
+                    </tr>
                   ))
                 )}
-              </TableBody>
-            </Table>
-          </Card>
+              </tbody>
+            </table>
+          </ModernCard>
         ) : (
-          <Card>
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>Data</TableHead>
-                  <TableHead>Produto</TableHead>
-                  <TableHead>Tipo</TableHead>
-                  <TableHead className="text-right">Quantidade</TableHead>
-                  <TableHead className="text-right">Anterior</TableHead>
-                  <TableHead className="text-right">Novo</TableHead>
-                  <TableHead>Motivo</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
+          <ModernCard noPadding>
+            <table className="w-full">
+              <thead>
+                <tr className="border-b border-border bg-muted/30">
+                  <th className="text-left p-4 font-medium text-muted-foreground text-sm">Data</th>
+                  <th className="text-left p-4 font-medium text-muted-foreground text-sm">Produto</th>
+                  <th className="text-left p-4 font-medium text-muted-foreground text-sm">Tipo</th>
+                  <th className="text-right p-4 font-medium text-muted-foreground text-sm">Quantidade</th>
+                  <th className="text-right p-4 font-medium text-muted-foreground text-sm">Anterior</th>
+                  <th className="text-right p-4 font-medium text-muted-foreground text-sm">Novo</th>
+                  <th className="text-left p-4 font-medium text-muted-foreground text-sm">Motivo</th>
+                </tr>
+              </thead>
+              <tbody>
                 {movementsLoading ? (
-                  <TableRow>
-                    <TableCell colSpan={7} className="text-center py-8 text-muted-foreground">
+                  <tr>
+                    <td colSpan={7} className="text-center py-8 text-muted-foreground">
                       Carregando movimentações...
-                    </TableCell>
-                  </TableRow>
+                    </td>
+                  </tr>
                 ) : movements.length === 0 ? (
-                  <TableRow>
-                    <TableCell colSpan={7} className="text-center py-8 text-muted-foreground">
-                      Nenhuma movimentação encontrada
-                    </TableCell>
-                  </TableRow>
+                  <tr>
+                    <td colSpan={7}>
+                      <ModernEmptyState icon={ArrowUpDown} title="Nenhuma movimentação encontrada" />
+                    </td>
+                  </tr>
                 ) : (
-                  movements.slice(0, 50).map((movement) => (
-                    <TableRow key={movement.id}>
-                      <TableCell className="text-sm">
+                  movements.slice(0, 50).map((movement, index) => (
+                    <tr 
+                      key={movement.id} 
+                      className="border-b border-border/50 last:border-0 hover:bg-muted/30 transition-colors"
+                      style={{ animationDelay: `${index * 20}ms` }}
+                    >
+                      <td className="p-4 text-sm text-muted-foreground">
                         {movement.created_at && format(new Date(movement.created_at), "dd/MM/yyyy HH:mm", { locale: ptBR })}
-                      </TableCell>
-                      <TableCell className="font-medium">
+                      </td>
+                      <td className="p-4 font-medium">
                         {(movement as any).products?.name || 'Produto'}
-                      </TableCell>
-                      <TableCell>
+                      </td>
+                      <td className="p-4">
                         <Badge className={getMovementTypeColor(movement.type)}>
                           {getMovementTypeLabel(movement.type)}
                         </Badge>
-                      </TableCell>
-                      <TableCell className="text-right font-mono">
+                      </td>
+                      <td className="p-4 text-right font-mono tabular-nums">
                         {movement.quantity > 0 ? '+' : ''}{movement.quantity}
-                      </TableCell>
-                      <TableCell className="text-right font-mono text-muted-foreground">
+                      </td>
+                      <td className="p-4 text-right font-mono tabular-nums text-muted-foreground">
                         {movement.previous_stock}
-                      </TableCell>
-                      <TableCell className="text-right font-mono">
+                      </td>
+                      <td className="p-4 text-right font-mono tabular-nums">
                         {movement.new_stock}
-                      </TableCell>
-                      <TableCell className="text-sm text-muted-foreground max-w-[200px] truncate">
+                      </td>
+                      <td className="p-4 text-sm text-muted-foreground max-w-[200px] truncate">
                         {movement.reason || '-'}
-                      </TableCell>
-                    </TableRow>
+                      </td>
+                    </tr>
                   ))
                 )}
-              </TableBody>
-            </Table>
-          </Card>
+              </tbody>
+            </table>
+          </ModernCard>
         )}
       </div>
 
