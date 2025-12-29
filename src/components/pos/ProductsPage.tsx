@@ -1,10 +1,11 @@
 import { useState } from 'react';
-import { Plus, Search, Edit2, Trash2, Package, Loader2 } from 'lucide-react';
+import { Plus, Edit2, Trash2, Package, Loader2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
 import { useProducts, useCategories, useProductMutations, DbProduct } from '@/hooks/useProducts';
 import { ProductModal } from './ProductModal';
 import { useAuth } from '@/hooks/useAuth';
+import { ModernPageHeader, ModernStatCard, ModernSearchBar, ModernCard, ModernEmptyState } from './common';
+import { Badge } from '@/components/ui/badge';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -83,6 +84,9 @@ export function ProductsPage() {
     setIsModalOpen(true);
   };
 
+  const lowStockCount = products.filter(p => Number(p.stock) <= Number(p.min_stock) && Number(p.stock) > 0).length;
+  const outOfStockCount = products.filter(p => Number(p.stock) === 0).length;
+
   if (loadingProducts || loadingCategories) {
     return (
       <div className="h-full flex items-center justify-center">
@@ -93,37 +97,62 @@ export function ProductsPage() {
 
   return (
     <div className="p-6 space-y-6 animate-fade-in h-full overflow-auto">
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-2xl font-bold mb-1">Produtos</h1>
-          <p className="text-muted-foreground">
-            {products.length} produtos cadastrados
-          </p>
-        </div>
-        {isSupervisor && (
-          <Button variant="default" onClick={handleOpenCreate}>
-            <Plus className="w-4 h-4 mr-2" />
-            Novo Produto
-          </Button>
-        )}
+      <ModernPageHeader
+        title="Produtos"
+        subtitle={`${products.length} produtos cadastrados`}
+        icon={Package}
+        actions={
+          isSupervisor && (
+            <Button onClick={handleOpenCreate} className="gap-2">
+              <Plus className="w-4 h-4" />
+              Novo Produto
+            </Button>
+          )
+        }
+      />
+
+      {/* Stats */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+        <ModernStatCard
+          title="Total de Produtos"
+          value={products.length}
+          icon={Package}
+          variant="blue"
+        />
+        <ModernStatCard
+          title="Ativos"
+          value={products.filter(p => p.is_active).length}
+          icon={Package}
+          variant="green"
+        />
+        <ModernStatCard
+          title="Estoque Baixo"
+          value={lowStockCount}
+          icon={Package}
+          variant="amber"
+        />
+        <ModernStatCard
+          title="Sem Estoque"
+          value={outOfStockCount}
+          icon={Package}
+          variant="red"
+        />
       </div>
 
-      {/* Filters */}
+      {/* Search and Filters */}
       <div className="flex flex-col sm:flex-row gap-4">
-        <div className="relative flex-1">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-          <Input
-            placeholder="Buscar por nome, código ou código de barras..."
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            className="pl-10"
-          />
-        </div>
+        <ModernSearchBar
+          value={searchQuery}
+          onChange={setSearchQuery}
+          placeholder="Buscar por nome, código ou código de barras..."
+          className="flex-1"
+        />
         <div className="flex gap-2 overflow-x-auto pb-2 sm:pb-0 scrollbar-hide">
           <Button
             variant={selectedCategory === null ? 'default' : 'secondary'}
             size="sm"
             onClick={() => setSelectedCategory(null)}
+            className="shrink-0"
           >
             Todos
           </Button>
@@ -142,47 +171,48 @@ export function ProductsPage() {
       </div>
 
       {/* Products Table */}
-      <div className="bg-card rounded-xl border border-border overflow-hidden">
+      <ModernCard noPadding>
         <div className="overflow-x-auto">
           <table className="w-full">
             <thead>
-              <tr className="border-b border-border bg-secondary/50">
-                <th className="text-left p-4 font-medium text-muted-foreground">Produto</th>
-                <th className="text-left p-4 font-medium text-muted-foreground">Código</th>
-                <th className="text-left p-4 font-medium text-muted-foreground">Categoria</th>
-                <th className="text-right p-4 font-medium text-muted-foreground">Preço</th>
-                <th className="text-right p-4 font-medium text-muted-foreground">Estoque</th>
+              <tr className="border-b border-border bg-muted/30">
+                <th className="text-left p-4 font-medium text-muted-foreground text-sm">Produto</th>
+                <th className="text-left p-4 font-medium text-muted-foreground text-sm">Código</th>
+                <th className="text-left p-4 font-medium text-muted-foreground text-sm">Categoria</th>
+                <th className="text-right p-4 font-medium text-muted-foreground text-sm">Preço</th>
+                <th className="text-right p-4 font-medium text-muted-foreground text-sm">Estoque</th>
                 {isSupervisor && (
-                  <th className="text-right p-4 font-medium text-muted-foreground">Ações</th>
+                  <th className="text-right p-4 font-medium text-muted-foreground text-sm">Ações</th>
                 )}
               </tr>
             </thead>
             <tbody>
-              {filteredProducts.map((product) => {
+              {filteredProducts.map((product, index) => {
                 const isLowStock = Number(product.stock) <= Number(product.min_stock);
                 return (
                   <tr
                     key={product.id}
-                    className="border-b border-border last:border-0 hover:bg-secondary/30 transition-colors"
+                    className="border-b border-border/50 last:border-0 hover:bg-muted/30 transition-colors"
+                    style={{ animationDelay: `${index * 30}ms` }}
                   >
                     <td className="p-4">
                       <div className="flex items-center gap-3">
-                        <div className="w-10 h-10 rounded-lg bg-secondary flex items-center justify-center">
-                          <Package className="w-5 h-5 text-muted-foreground" />
+                        <div className="w-10 h-10 rounded-lg bg-gradient-to-br from-primary/10 to-primary/5 flex items-center justify-center border border-primary/10">
+                          <Package className="w-5 h-5 text-primary" />
                         </div>
                         <div>
-                          <p className="font-medium">{product.name}</p>
+                          <p className="font-medium text-foreground">{product.name}</p>
                           <p className="text-sm text-muted-foreground">
                             {product.barcode || '-'}
                           </p>
                         </div>
                       </div>
                     </td>
-                    <td className="p-4 text-muted-foreground font-mono">{product.code}</td>
+                    <td className="p-4 text-muted-foreground font-mono text-sm">{product.code}</td>
                     <td className="p-4">
-                      <span className="px-2 py-1 rounded-full bg-secondary text-sm">
+                      <Badge variant="secondary" className="font-normal">
                         {getCategoryName(product.category_id)}
-                      </span>
+                      </Badge>
                     </td>
                     <td className="p-4 text-right font-medium tabular-nums">
                       R$ {Number(product.price).toFixed(2).replace('.', ',')}
@@ -201,11 +231,11 @@ export function ProductsPage() {
                     </td>
                     {isSupervisor && (
                       <td className="p-4">
-                        <div className="flex items-center justify-end gap-2">
+                        <div className="flex items-center justify-end gap-1">
                           <Button
                             variant="ghost"
                             size="icon"
-                            className="h-8 w-8"
+                            className="h-8 w-8 hover:bg-primary/10"
                             onClick={() => handleOpenEdit(product)}
                           >
                             <Edit2 className="w-4 h-4" />
@@ -213,7 +243,7 @@ export function ProductsPage() {
                           <Button
                             variant="ghost"
                             size="icon"
-                            className="h-8 w-8 text-destructive hover:text-destructive"
+                            className="h-8 w-8 text-destructive hover:text-destructive hover:bg-destructive/10"
                             onClick={() => setDeletingProduct(product)}
                           >
                             <Trash2 className="w-4 h-4" />
@@ -229,12 +259,13 @@ export function ProductsPage() {
         </div>
 
         {filteredProducts.length === 0 && (
-          <div className="p-12 text-center">
-            <Package className="w-12 h-12 text-muted-foreground mx-auto mb-4" />
-            <p className="text-muted-foreground">Nenhum produto encontrado</p>
-          </div>
+          <ModernEmptyState
+            icon={Package}
+            title="Nenhum produto encontrado"
+            description="Tente ajustar os filtros de busca"
+          />
         )}
-      </div>
+      </ModernCard>
 
       {/* Product Modal */}
       <ProductModal

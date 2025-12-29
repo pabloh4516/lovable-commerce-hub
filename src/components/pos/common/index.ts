@@ -3,3 +3,8 @@ export { StatCard } from './StatCard';
 export { SearchFilter } from './SearchFilter';
 export { EmptyState } from './EmptyState';
 export { DataCard } from './DataCard';
+export { ModernPageHeader } from './ModernPageHeader';
+export { ModernStatCard } from './ModernStatCard';
+export { ModernSearchBar } from './ModernSearchBar';
+export { ModernCard, ModernCardHeader } from './ModernCard';
+export { ModernEmptyState } from './ModernEmptyState';
