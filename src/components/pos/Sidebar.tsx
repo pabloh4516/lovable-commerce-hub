@@ -160,20 +160,20 @@ export function Sidebar({ currentPage, onNavigate }: SidebarProps) {
           <CollapsibleTrigger asChild>
             <button
               className={cn(
-                'w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-all duration-200',
-                'text-sidebar-foreground/60 hover:text-sidebar-foreground hover:bg-sidebar-accent',
-                hasActiveChild && 'bg-sidebar-accent/50 text-sidebar-foreground'
+                'w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-all duration-150',
+                'text-sidebar-foreground/70 hover:text-sidebar-foreground hover:bg-sidebar-accent',
+                hasActiveChild && 'bg-accent/10 text-accent'
               )}
             >
               <div className={cn(
                 "w-8 h-8 rounded-lg flex items-center justify-center transition-colors shrink-0",
-                hasActiveChild ? "bg-primary/20 text-primary" : "bg-sidebar-accent"
+                hasActiveChild ? "bg-accent/15 text-accent" : "bg-sidebar-accent text-sidebar-foreground/70"
               )}>
-                <Icon className="w-4 h-4" />
+                <Icon className="w-4 h-4" strokeWidth={1.5} />
               </div>
               <span className="flex-1 text-left whitespace-nowrap">{item.label}</span>
               <ChevronDown className={cn(
-                "w-4 h-4 transition-transform duration-200 text-sidebar-foreground/40",
+                "w-4 h-4 transition-transform duration-150 text-sidebar-foreground/40",
                 isOpen && "rotate-180"
               )} />
             </button>
@@ -191,34 +191,34 @@ export function Sidebar({ currentPage, onNavigate }: SidebarProps) {
       <button
         onClick={() => onNavigate(item.id)}
         className={cn(
-          'relative w-full flex items-center gap-3 px-3 py-2 rounded-xl text-sm font-medium transition-all duration-200',
-          'text-sidebar-foreground/60 hover:text-sidebar-foreground hover:bg-sidebar-accent',
-          isActive && 'bg-sidebar-accent text-sidebar-foreground',
+          'relative w-full flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium transition-all duration-150',
+          'text-sidebar-foreground/70 hover:text-sidebar-foreground hover:bg-sidebar-accent',
+          isActive && 'bg-accent/10 text-accent',
           isChild && 'py-2 text-[13px]',
           isCollapsed && 'justify-center px-2'
         )}
       >
         {/* Active indicator */}
         {isActive && !isChild && (
-          <div className="absolute left-0 top-1/2 -translate-y-1/2 w-1 h-6 rounded-r-full bg-primary" />
+          <div className="absolute left-0 top-1/2 -translate-y-1/2 w-0.5 h-5 rounded-r-full bg-accent" />
         )}
         
         {!isChild ? (
           <div className={cn(
             "w-8 h-8 rounded-lg flex items-center justify-center transition-colors shrink-0",
-            isActive ? "bg-primary text-primary-foreground" : "bg-sidebar-accent"
+            isActive ? "bg-accent/15 text-accent" : "bg-sidebar-accent text-sidebar-foreground/70"
           )}>
-            <Icon className="w-4 h-4" />
+            <Icon className="w-4 h-4" strokeWidth={1.5} />
           </div>
         ) : (
           <div className={cn(
             "w-1.5 h-1.5 rounded-full shrink-0 transition-colors",
-            isActive ? "bg-primary" : "bg-sidebar-foreground/30"
+            isActive ? "bg-accent" : "bg-sidebar-foreground/30"
           )} />
         )}
         
         <span className={cn(
-          "transition-all duration-200 whitespace-nowrap flex-1 text-left",
+          "transition-all duration-150 whitespace-nowrap flex-1 text-left",
           isCollapsed && !isChild ? "w-0 opacity-0 hidden" : "w-auto opacity-100"
         )}>
           {item.label}
@@ -226,7 +226,7 @@ export function Sidebar({ currentPage, onNavigate }: SidebarProps) {
 
         {/* Badge */}
         {item.badge !== undefined && item.badge > 0 && !isCollapsed && (
-          <span className="px-2 py-0.5 rounded-full text-[10px] font-semibold bg-primary text-primary-foreground">
+          <span className="px-2 py-0.5 rounded-md text-[10px] font-semibold bg-accent text-accent-foreground">
             {item.badge}
           </span>
         )}
@@ -253,19 +253,16 @@ export function Sidebar({ currentPage, onNavigate }: SidebarProps) {
     <TooltipProvider delayDuration={0}>
       <aside 
         className={cn(
-          "h-screen bg-sidebar flex flex-col transition-all duration-300 ease-out relative shrink-0",
+          "h-screen bg-sidebar flex flex-col transition-all duration-200 ease-out relative shrink-0 border-r border-sidebar-border",
           isCollapsed ? "w-[72px]" : "w-60"
         )}
       >
-        {/* Subtle gradient overlay */}
-        <div className="absolute inset-0 bg-gradient-to-b from-white/[0.02] to-transparent pointer-events-none" />
-
         {/* Collapse Toggle */}
         <button
           onClick={() => setIsCollapsed(!isCollapsed)}
           className={cn(
             "absolute -right-3 top-7 w-6 h-6 rounded-full bg-card text-muted-foreground",
-            "flex items-center justify-center shadow-md hover:bg-primary hover:text-primary-foreground transition-all z-20",
+            "flex items-center justify-center shadow-sm hover:bg-accent hover:text-accent-foreground transition-all z-20",
             "border border-border"
           )}
         >
@@ -280,8 +277,8 @@ export function Sidebar({ currentPage, onNavigate }: SidebarProps) {
         <div className={cn("p-4 border-b border-sidebar-border relative", isCollapsed && "px-3")}>
           <div className="flex items-center gap-3">
             <div className={cn(
-              "rounded-xl bg-gradient-to-br from-primary to-primary/80 flex items-center justify-center shrink-0 shadow-lg shadow-primary/20",
-              isCollapsed ? "w-10 h-10" : "w-11 h-11"
+              "rounded-lg bg-primary flex items-center justify-center shrink-0",
+              isCollapsed ? "w-10 h-10" : "w-10 h-10"
             )}>
               <Store className="w-5 h-5 text-primary-foreground" />
             </div>
@@ -289,8 +286,8 @@ export function Sidebar({ currentPage, onNavigate }: SidebarProps) {
               "transition-all duration-200 overflow-hidden",
               isCollapsed ? "w-0 opacity-0" : "w-auto opacity-100"
             )}>
-              <h1 className="font-bold text-base text-sidebar-foreground whitespace-nowrap">PDV Express</h1>
-              <p className="text-[11px] text-sidebar-foreground/50 whitespace-nowrap">Sistema de Vendas</p>
+              <h1 className="font-semibold text-base text-sidebar-foreground whitespace-nowrap">Pronto</h1>
+              <p className="text-xs text-muted-foreground whitespace-nowrap">Sistema de Vendas</p>
             </div>
           </div>
         </div>
@@ -305,32 +302,32 @@ export function Sidebar({ currentPage, onNavigate }: SidebarProps) {
         {/* User Profile */}
         <div className="p-3 border-t border-sidebar-border relative">
           <div className={cn(
-            "flex items-center gap-3 p-2 rounded-xl transition-all duration-200",
+            "flex items-center gap-3 p-2 rounded-lg transition-all duration-150",
             isCollapsed && "justify-center p-2"
           )}>
             {/* Avatar */}
             <div className="relative shrink-0">
               <div className={cn(
-                "rounded-xl flex items-center justify-center bg-gradient-to-br from-primary to-primary/80 shadow-md",
-                isCollapsed ? "w-9 h-9" : "w-10 h-10"
+                "rounded-lg flex items-center justify-center bg-primary",
+                isCollapsed ? "w-9 h-9" : "w-9 h-9"
               )}>
-                <span className="text-xs font-semibold text-primary-foreground">
+                <span className="text-xs font-medium text-primary-foreground">
                   {profile?.name ? getInitials(profile.name) : '??'}
                 </span>
               </div>
               {/* Online indicator */}
-              <span className="absolute -bottom-0.5 -right-0.5 w-3 h-3 bg-success rounded-full border-2 border-sidebar" />
+              <span className="absolute -bottom-0.5 -right-0.5 w-2.5 h-2.5 bg-success rounded-full border-2 border-sidebar" />
             </div>
             
             {/* User Info */}
             <div className={cn(
-              "flex-1 min-w-0 transition-all duration-200",
+              "flex-1 min-w-0 transition-all duration-150",
               isCollapsed ? "hidden" : "block"
             )}>
               <p className="font-medium text-sm truncate text-sidebar-foreground">
                 {profile?.name || 'Carregando...'}
               </p>
-              <p className="text-xs text-sidebar-foreground/50 truncate">
+              <p className="text-xs text-muted-foreground truncate">
                 {getRoleLabel(role)}
               </p>
             </div>
@@ -341,11 +338,11 @@ export function Sidebar({ currentPage, onNavigate }: SidebarProps) {
                 <button 
                   onClick={handleLogout}
                   className={cn(
-                    "p-2 rounded-lg text-sidebar-foreground/40 hover:text-destructive hover:bg-destructive/10 transition-all",
+                    "p-2 rounded-lg text-muted-foreground hover:text-destructive hover:bg-destructive/10 transition-all",
                     isCollapsed ? "hidden" : "flex"
                   )}
                 >
-                  <LogOut className="w-4 h-4" />
+                  <LogOut className="w-4 h-4" strokeWidth={1.5} />
                 </button>
               </TooltipTrigger>
               <TooltipContent side="top">
@@ -360,9 +357,9 @@ export function Sidebar({ currentPage, onNavigate }: SidebarProps) {
               <TooltipTrigger asChild>
                 <button 
                   onClick={handleLogout}
-                  className="w-full mt-2 p-2 rounded-lg flex items-center justify-center text-sidebar-foreground/40 hover:text-destructive hover:bg-destructive/10 transition-all"
+                  className="w-full mt-2 p-2 rounded-lg flex items-center justify-center text-muted-foreground hover:text-destructive hover:bg-destructive/10 transition-all"
                 >
-                  <LogOut className="w-4 h-4" />
+                  <LogOut className="w-4 h-4" strokeWidth={1.5} />
                 </button>
               </TooltipTrigger>
               <TooltipContent side="right">
