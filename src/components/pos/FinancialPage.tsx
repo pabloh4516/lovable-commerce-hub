@@ -16,9 +16,9 @@ import {
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Card, CardContent } from '@/components/ui/card';
 import {
   Table,
   TableBody,
@@ -27,6 +27,7 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table';
+import { ModernPageHeader, ModernStatCard, ModernSearchBar, ModernCard, ModernEmptyState } from './common';
 import {
   Dialog,
   DialogContent,
@@ -53,12 +54,12 @@ import { useSuppliers } from '@/hooks/useSuppliers';
 import { format, startOfMonth, endOfMonth } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 
-const statusConfig: Record<string, { label: string; color: string }> = {
-  pending: { label: 'Pendente', color: 'bg-yellow-500' },
-  partial: { label: 'Parcial', color: 'bg-blue-500' },
-  paid: { label: 'Pago', color: 'bg-success' },
-  overdue: { label: 'Vencido', color: 'bg-destructive' },
-  cancelled: { label: 'Cancelado', color: 'bg-muted' },
+const statusConfig: Record<string, { label: string; className: string }> = {
+  pending: { label: 'Pendente', className: 'bg-amber-500/10 text-amber-600 border-amber-500/20' },
+  partial: { label: 'Parcial', className: 'bg-blue-500/10 text-blue-600 border-blue-500/20' },
+  paid: { label: 'Pago', className: 'bg-emerald-500/10 text-emerald-600 border-emerald-500/20' },
+  overdue: { label: 'Vencido', className: 'bg-red-500/10 text-red-600 border-red-500/20' },
+  cancelled: { label: 'Cancelado', className: 'bg-muted text-muted-foreground' },
 };
 
 export function FinancialPage() {
@@ -370,7 +371,7 @@ export function FinancialPage() {
                             R$ {transaction.paid_amount.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
                           </TableCell>
                           <TableCell>
-                            <Badge className={isOverdue ? 'bg-destructive' : status.color}>
+                            <Badge className={isOverdue ? 'bg-red-500/10 text-red-600 border-red-500/20' : status.className}>
                               {isOverdue ? 'Vencido' : status.label}
                             </Badge>
                           </TableCell>

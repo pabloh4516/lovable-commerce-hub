@@ -1,8 +1,5 @@
 import { useState } from 'react';
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
 import { 
   Search, 
@@ -51,6 +48,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
+import { ModernPageHeader, ModernStatCard, ModernSearchBar, ModernCard, ModernEmptyState } from './common';
 
 export function UsersPage() {
   const [searchQuery, setSearchQuery] = useState('');
@@ -89,14 +87,14 @@ export function UsersPage() {
         );
       case 'supervisor':
         return (
-          <Badge variant="secondary" className="gap-1 bg-warning/10 text-warning border-warning/20">
+          <Badge className="gap-1 bg-amber-500/10 text-amber-600 border-amber-500/20">
             <ShieldCheck className="w-3 h-3" />
             Supervisor
           </Badge>
         );
       default:
         return (
-          <Badge variant="outline" className="gap-1">
+          <Badge variant="secondary" className="gap-1">
             <User className="w-3 h-3" />
             Operador
           </Badge>
@@ -121,151 +119,140 @@ export function UsersPage() {
     });
   };
 
-  return (
-    <div className="p-6 space-y-6 overflow-auto h-full">
-      {/* Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-        <div>
-          <h1 className="text-2xl font-bold flex items-center gap-2">
-            <Users className="w-6 h-6 text-primary" />
-            Gestão de Usuários
-          </h1>
-          <p className="text-muted-foreground">
-            Cadastre e gerencie gerentes e funcionários
-          </p>
-        </div>
-        
-        {(isAdmin || isSupervisor || users.length === 0) && (
-          <Button className="gap-2" onClick={() => setIsCreateModalOpen(true)}>
-            <UserPlus className="w-4 h-4" />
-            Novo Usuário
-          </Button>
-        )}
+  if (isLoading) {
+    return (
+      <div className="flex items-center justify-center h-full">
+        <Loader2 className="w-8 h-8 animate-spin text-primary" />
       </div>
+    );
+  }
+
+  return (
+    <div className="p-6 space-y-6 animate-fade-in h-full overflow-auto">
+      <ModernPageHeader
+        title="Gestão de Usuários"
+        subtitle="Cadastre e gerencie gerentes e funcionários"
+        icon={Users}
+        actions={
+          (isAdmin || isSupervisor || users.length === 0) && (
+            <Button className="gap-2" onClick={() => setIsCreateModalOpen(true)}>
+              <UserPlus className="w-4 h-4" />
+              Novo Usuário
+            </Button>
+          )
+        }
+      />
 
       {/* Stats Cards */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-        <Card>
-          <CardContent className="p-4">
-            <div className="flex items-center gap-3">
-              <div className="p-2 bg-primary/10 rounded-lg">
-                <Users className="w-5 h-5 text-primary" />
-              </div>
-              <div>
-                <p className="text-2xl font-bold">{userCounts.total}</p>
-                <p className="text-xs text-muted-foreground">Total</p>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardContent className="p-4">
-            <div className="flex items-center gap-3">
-              <div className="p-2 bg-primary/10 rounded-lg">
-                <Shield className="w-5 h-5 text-primary" />
-              </div>
-              <div>
-                <p className="text-2xl font-bold">{userCounts.admins}</p>
-                <p className="text-xs text-muted-foreground">Gerentes</p>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardContent className="p-4">
-            <div className="flex items-center gap-3">
-              <div className="p-2 bg-warning/10 rounded-lg">
-                <ShieldCheck className="w-5 h-5 text-warning" />
-              </div>
-              <div>
-                <p className="text-2xl font-bold">{userCounts.supervisors}</p>
-                <p className="text-xs text-muted-foreground">Supervisores</p>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardContent className="p-4">
-            <div className="flex items-center gap-3">
-              <div className="p-2 bg-secondary rounded-lg">
-                <User className="w-5 h-5 text-muted-foreground" />
-              </div>
-              <div>
-                <p className="text-2xl font-bold">{userCounts.operators}</p>
-                <p className="text-xs text-muted-foreground">Operadores</p>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
+        <ModernStatCard
+          title="Total"
+          value={userCounts.total}
+          icon={Users}
+          variant="blue"
+        />
+        <ModernStatCard
+          title="Gerentes"
+          value={userCounts.admins}
+          icon={Shield}
+          variant="purple"
+        />
+        <ModernStatCard
+          title="Supervisores"
+          value={userCounts.supervisors}
+          icon={ShieldCheck}
+          variant="amber"
+        />
+        <ModernStatCard
+          title="Operadores"
+          value={userCounts.operators}
+          icon={User}
+          variant="green"
+        />
+      </div>
+
+      {/* Filters */}
+      <div className="flex flex-col sm:flex-row gap-4">
+        <ModernSearchBar
+          value={searchQuery}
+          onChange={setSearchQuery}
+          placeholder="Buscar por nome ou código..."
+          className="flex-1 max-w-md"
+        />
+        <Select value={roleFilter} onValueChange={setRoleFilter}>
+          <SelectTrigger className="w-[180px]">
+            <Filter className="w-4 h-4 mr-2" />
+            <SelectValue placeholder="Filtrar por função" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="all">Todas as funções</SelectItem>
+            <SelectItem value="admin">Gerentes</SelectItem>
+            <SelectItem value="supervisor">Supervisores</SelectItem>
+            <SelectItem value="operator">Operadores</SelectItem>
+          </SelectContent>
+        </Select>
       </div>
 
       {/* Users Table */}
-      <Card>
-        <CardHeader>
-          <CardTitle>Lista de Usuários</CardTitle>
-          <CardDescription>Gerentes, supervisores e operadores do sistema</CardDescription>
-          <div className="flex flex-col sm:flex-row gap-4 pt-2">
-            <div className="relative flex-1 max-w-md">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-              <Input
-                placeholder="Buscar por nome ou código..."
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                className="pl-10"
-              />
-            </div>
-            <Select value={roleFilter} onValueChange={setRoleFilter}>
-              <SelectTrigger className="w-[180px]">
-                <Filter className="w-4 h-4 mr-2" />
-                <SelectValue placeholder="Filtrar por função" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">Todas as funções</SelectItem>
-                <SelectItem value="admin">Gerentes</SelectItem>
-                <SelectItem value="supervisor">Supervisores</SelectItem>
-                <SelectItem value="operator">Operadores</SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
-        </CardHeader>
-        <CardContent>
-          {isLoading ? (
-            <div className="flex justify-center py-8">
-              <Loader2 className="w-6 h-6 animate-spin" />
-            </div>
-          ) : (
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>Nome</TableHead>
-                  <TableHead>Código</TableHead>
-                  <TableHead>Função</TableHead>
-                  <TableHead>Status</TableHead>
-                  {(isAdmin || isSupervisor) && <TableHead className="w-16" />}
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {filteredUsers.map((user) => (
-                  <TableRow key={user.id}>
-                    <TableCell className="font-medium">{user.name}</TableCell>
-                    <TableCell className="font-mono text-muted-foreground">{user.code}</TableCell>
-                    <TableCell>{getRoleBadge(user.role)}</TableCell>
-                    <TableCell>
+      <ModernCard noPadding>
+        <div className="p-4 border-b border-border">
+          <h3 className="font-semibold">Lista de Usuários</h3>
+          <p className="text-sm text-muted-foreground">Gerentes, supervisores e operadores do sistema</p>
+        </div>
+        <div className="overflow-x-auto">
+          <table className="w-full">
+            <thead>
+              <tr className="border-b border-border bg-muted/30">
+                <th className="text-left p-4 font-medium text-muted-foreground text-sm">Nome</th>
+                <th className="text-left p-4 font-medium text-muted-foreground text-sm">Código</th>
+                <th className="text-left p-4 font-medium text-muted-foreground text-sm">Função</th>
+                <th className="text-center p-4 font-medium text-muted-foreground text-sm">Status</th>
+                {(isAdmin || isSupervisor) && (
+                  <th className="text-right p-4 font-medium text-muted-foreground text-sm">Ações</th>
+                )}
+              </tr>
+            </thead>
+            <tbody>
+              {filteredUsers.length === 0 ? (
+                <tr>
+                  <td colSpan={(isAdmin || isSupervisor) ? 5 : 4}>
+                    <ModernEmptyState
+                      icon={Users}
+                      title="Nenhum usuário encontrado"
+                    />
+                  </td>
+                </tr>
+              ) : (
+                filteredUsers.map((user, index) => (
+                  <tr 
+                    key={user.id}
+                    className="border-b border-border/50 last:border-0 hover:bg-muted/30 transition-colors"
+                    style={{ animationDelay: `${index * 30}ms` }}
+                  >
+                    <td className="p-4">
+                      <div className="flex items-center gap-3">
+                        <div className="w-9 h-9 rounded-full bg-gradient-to-br from-primary/20 to-primary/5 flex items-center justify-center">
+                          <User className="h-4 w-4 text-primary" />
+                        </div>
+                        <span className="font-medium">{user.name}</span>
+                      </div>
+                    </td>
+                    <td className="p-4 font-mono text-sm text-muted-foreground">{user.code}</td>
+                    <td className="p-4">{getRoleBadge(user.role)}</td>
+                    <td className="p-4 text-center">
                       {user.is_active ? (
-                        <Badge variant="outline" className="text-success border-success/30 bg-success/10">
+                        <Badge className="bg-emerald-500/10 text-emerald-600 border-emerald-500/20">
                           Ativo
                         </Badge>
                       ) : (
-                        <Badge variant="outline" className="text-destructive border-destructive/30 bg-destructive/10">
-                          Inativo
-                        </Badge>
+                        <Badge variant="destructive">Inativo</Badge>
                       )}
-                    </TableCell>
+                    </td>
                     {(isAdmin || isSupervisor) && (
-                      <TableCell>
+                      <td className="p-4 text-right">
                         <DropdownMenu>
                           <DropdownMenuTrigger asChild>
-                            <Button variant="ghost" size="icon">
+                            <Button variant="ghost" size="icon" className="h-8 w-8">
                               <MoreHorizontal className="w-4 h-4" />
                             </Button>
                           </DropdownMenuTrigger>
@@ -312,22 +299,15 @@ export function UsersPage() {
                             )}
                           </DropdownMenuContent>
                         </DropdownMenu>
-                      </TableCell>
+                      </td>
                     )}
-                  </TableRow>
-                ))}
-                {filteredUsers.length === 0 && (
-                  <TableRow>
-                    <TableCell colSpan={(isAdmin || isSupervisor) ? 5 : 4} className="text-center text-muted-foreground py-8">
-                      Nenhum usuário encontrado
-                    </TableCell>
-                  </TableRow>
-                )}
-              </TableBody>
-            </Table>
-          )}
-        </CardContent>
-      </Card>
+                  </tr>
+                ))
+              )}
+            </tbody>
+          </table>
+        </div>
+      </ModernCard>
 
       {/* Modals */}
       <UserCreateModal

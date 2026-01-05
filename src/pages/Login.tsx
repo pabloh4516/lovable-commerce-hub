@@ -122,7 +122,7 @@ export default function Login() {
               <Store className="w-7 h-7" />
             </div>
             <div>
-              <h1 className="text-2xl font-bold">PDV Express</h1>
+              <h1 className="text-2xl font-bold">Pronto</h1>
               <p className="text-white/70 text-sm">Sistema de Ponto de Venda</p>
             </div>
           </div>
@@ -162,7 +162,7 @@ export default function Login() {
             <div className="w-16 h-16 mx-auto rounded-2xl bg-gradient-to-br from-primary to-primary/80 flex items-center justify-center mb-4 shadow-lg shadow-primary/25">
               <Store className="w-8 h-8 text-primary-foreground" />
             </div>
-            <h1 className="text-2xl font-bold text-foreground">PDV Express</h1>
+            <h1 className="text-2xl font-bold text-foreground">Pronto</h1>
             <p className="text-muted-foreground mt-1">Sistema de Ponto de Venda</p>
           </div>
 
@@ -359,7 +359,7 @@ export default function Login() {
           </div>
 
           <p className="text-xs text-center text-muted-foreground mt-8">
-            © 2024 PDV Express. Todos os direitos reservados.
+            © 2024 Pronto. Todos os direitos reservados.
           </p>
         </div>
       </div>
