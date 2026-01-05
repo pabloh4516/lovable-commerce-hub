@@ -1,26 +1,18 @@
 import { useState } from 'react';
 import { 
   Plus, 
-  Search, 
   Building2, 
   Phone, 
   Mail, 
   MapPin,
   Edit,
   Trash2,
-  Loader2
+  Loader2,
+  Truck
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Card, CardContent } from '@/components/ui/card';
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from '@/components/ui/table';
+import { Badge } from '@/components/ui/badge';
 import {
   Dialog,
   DialogContent,
@@ -41,6 +33,7 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { useSuppliers, useSupplierMutations, Supplier } from '@/hooks/useSuppliers';
 import { useAuth } from '@/hooks/useAuth';
+import { ModernPageHeader, ModernStatCard, ModernSearchBar, ModernCard, ModernEmptyState } from './common';
 
 export function SuppliersPage() {
   const { data: suppliers, isLoading } = useSuppliers();
@@ -193,86 +186,117 @@ export function SuppliersPage() {
   }
 
   return (
-    <div className="p-6 space-y-6">
-      {/* Header */}
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-2xl font-bold text-foreground">Fornecedores</h1>
-          <p className="text-muted-foreground">Gerencie seus fornecedores</p>
-        </div>
-        {canManage && (
-          <Button onClick={() => handleOpenModal()} className="gap-2">
-            <Plus className="w-4 h-4" />
-            Novo Fornecedor
-          </Button>
-        )}
+    <div className="p-6 space-y-6 animate-fade-in h-full overflow-auto">
+      <ModernPageHeader
+        title="Fornecedores"
+        subtitle="Gerencie seus fornecedores"
+        icon={Truck}
+        actions={
+          canManage && (
+            <Button onClick={() => handleOpenModal()} className="gap-2">
+              <Plus className="w-4 h-4" />
+              Novo Fornecedor
+            </Button>
+          )
+        }
+      />
+
+      {/* Stats */}
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+        <ModernStatCard
+          title="Total de Fornecedores"
+          value={suppliers?.length || 0}
+          icon={Truck}
+          variant="blue"
+        />
+        <ModernStatCard
+          title="Ativos"
+          value={suppliers?.filter(s => s.is_active).length || 0}
+          icon={Building2}
+          variant="green"
+        />
+        <ModernStatCard
+          title="Com Email"
+          value={suppliers?.filter(s => s.email).length || 0}
+          icon={Mail}
+          variant="purple"
+        />
       </div>
 
       {/* Search */}
-      <Card>
-        <CardContent className="p-4">
-          <div className="relative">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-            <Input
-              placeholder="Buscar por nome, código ou CNPJ..."
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              className="pl-10"
-            />
-          </div>
-        </CardContent>
-      </Card>
+      <ModernSearchBar
+        value={searchQuery}
+        onChange={setSearchQuery}
+        placeholder="Buscar por nome, código ou CNPJ..."
+        className="max-w-md"
+      />
 
       {/* Table */}
-      <Card>
-        <CardContent className="p-0">
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>Código</TableHead>
-                <TableHead>Nome</TableHead>
-                <TableHead>CNPJ/CPF</TableHead>
-                <TableHead>Telefone</TableHead>
-                <TableHead>Cidade/UF</TableHead>
-                {canManage && <TableHead className="w-[100px]">Ações</TableHead>}
-              </TableRow>
-            </TableHeader>
-            <TableBody>
+      <ModernCard noPadding>
+        <div className="overflow-x-auto">
+          <table className="w-full">
+            <thead>
+              <tr className="border-b border-border bg-muted/30">
+                <th className="text-left p-4 font-medium text-muted-foreground text-sm">Código</th>
+                <th className="text-left p-4 font-medium text-muted-foreground text-sm">Nome</th>
+                <th className="text-left p-4 font-medium text-muted-foreground text-sm">CNPJ/CPF</th>
+                <th className="text-left p-4 font-medium text-muted-foreground text-sm">Telefone</th>
+                <th className="text-left p-4 font-medium text-muted-foreground text-sm">Cidade/UF</th>
+                {canManage && <th className="text-right p-4 font-medium text-muted-foreground text-sm">Ações</th>}
+              </tr>
+            </thead>
+            <tbody>
               {filteredSuppliers.length === 0 ? (
-                <TableRow>
-                  <TableCell colSpan={canManage ? 6 : 5} className="text-center py-8 text-muted-foreground">
-                    Nenhum fornecedor encontrado
-                  </TableCell>
-                </TableRow>
+                <tr>
+                  <td colSpan={canManage ? 6 : 5}>
+                    <ModernEmptyState
+                      icon={Truck}
+                      title="Nenhum fornecedor encontrado"
+                      description="Adicione um novo fornecedor para começar"
+                    />
+                  </td>
+                </tr>
               ) : (
-                filteredSuppliers.map((supplier) => (
-                  <TableRow key={supplier.id}>
-                    <TableCell className="font-mono">{supplier.code}</TableCell>
-                    <TableCell>
-                      <div>
-                        <p className="font-medium">{supplier.name}</p>
-                        {supplier.fantasy_name && (
-                          <p className="text-sm text-muted-foreground">{supplier.fantasy_name}</p>
-                        )}
+                filteredSuppliers.map((supplier, index) => (
+                  <tr 
+                    key={supplier.id}
+                    className="border-b border-border/50 last:border-0 hover:bg-muted/30 transition-colors"
+                    style={{ animationDelay: `${index * 30}ms` }}
+                  >
+                    <td className="p-4 font-mono text-sm text-muted-foreground">{supplier.code}</td>
+                    <td className="p-4">
+                      <div className="flex items-center gap-3">
+                        <div className="w-9 h-9 rounded-lg bg-gradient-to-br from-primary/10 to-primary/5 flex items-center justify-center border border-primary/10">
+                          <Building2 className="h-4 w-4 text-primary" />
+                        </div>
+                        <div>
+                          <p className="font-medium">{supplier.name}</p>
+                          {supplier.fantasy_name && (
+                            <p className="text-sm text-muted-foreground">{supplier.fantasy_name}</p>
+                          )}
+                        </div>
                       </div>
-                    </TableCell>
-                    <TableCell className="font-mono">
+                    </td>
+                    <td className="p-4 font-mono text-sm text-muted-foreground">
                       {supplier.cnpj || supplier.cpf || '-'}
-                    </TableCell>
-                    <TableCell>
+                    </td>
+                    <td className="p-4 text-muted-foreground">
                       {supplier.phone || '-'}
-                    </TableCell>
-                    <TableCell>
-                      {supplier.city && supplier.state 
-                        ? `${supplier.city}/${supplier.state}` 
-                        : '-'}
-                    </TableCell>
+                    </td>
+                    <td className="p-4">
+                      {supplier.city && supplier.state ? (
+                        <Badge variant="secondary">{supplier.city}/{supplier.state}</Badge>
+                      ) : (
+                        <span className="text-muted-foreground">-</span>
+                      )}
+                    </td>
                     {canManage && (
-                      <TableCell>
-                        <div className="flex gap-1">
+                      <td className="p-4 text-right">
+                        <div className="flex gap-1 justify-end">
                           <Button
                             variant="ghost"
                             size="icon"
+                            className="h-8 w-8"
                             onClick={() => handleOpenModal(supplier)}
                           >
                             <Edit className="w-4 h-4" />
@@ -280,20 +304,21 @@ export function SuppliersPage() {
                           <Button
                             variant="ghost"
                             size="icon"
+                            className="h-8 w-8 text-destructive hover:text-destructive"
                             onClick={() => setDeletingSupplier(supplier)}
                           >
-                            <Trash2 className="w-4 h-4 text-destructive" />
+                            <Trash2 className="w-4 h-4" />
                           </Button>
                         </div>
-                      </TableCell>
+                      </td>
                     )}
-                  </TableRow>
+                  </tr>
                 ))
               )}
-            </TableBody>
-          </Table>
-        </CardContent>
-      </Card>
+            </tbody>
+          </table>
+        </div>
+      </ModernCard>
 
       {/* Modal */}
       <Dialog open={showModal} onOpenChange={setShowModal}>
@@ -498,7 +523,13 @@ export function SuppliersPage() {
             <Button variant="outline" onClick={() => setShowModal(false)}>
               Cancelar
             </Button>
-            <Button onClick={handleSave} disabled={!formData.code || !formData.name}>
+            <Button 
+              onClick={handleSave}
+              disabled={createSupplier.isPending || updateSupplier.isPending}
+            >
+              {(createSupplier.isPending || updateSupplier.isPending) && (
+                <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+              )}
               {editingSupplier ? 'Salvar' : 'Criar'}
             </Button>
           </div>
@@ -509,14 +540,17 @@ export function SuppliersPage() {
       <AlertDialog open={!!deletingSupplier} onOpenChange={() => setDeletingSupplier(null)}>
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>Excluir Fornecedor</AlertDialogTitle>
+            <AlertDialogTitle>Excluir fornecedor?</AlertDialogTitle>
             <AlertDialogDescription>
-              Tem certeza que deseja excluir o fornecedor "{deletingSupplier?.name}"?
+              Tem certeza que deseja excluir o fornecedor "{deletingSupplier?.name}"? Esta ação não pode ser desfeita.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
             <AlertDialogCancel>Cancelar</AlertDialogCancel>
-            <AlertDialogAction onClick={handleDelete} className="bg-destructive text-destructive-foreground">
+            <AlertDialogAction
+              onClick={handleDelete}
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+            >
               Excluir
             </AlertDialogAction>
           </AlertDialogFooter>

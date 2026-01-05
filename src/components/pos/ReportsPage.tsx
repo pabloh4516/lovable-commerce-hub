@@ -1,15 +1,15 @@
 import { useState } from 'react';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
+import { Badge } from '@/components/ui/badge';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
-import { BarChart3, DollarSign, TrendingUp, Package, Loader2 } from 'lucide-react';
+import { BarChart3, DollarSign, TrendingUp, Package, Loader2, Calendar, Download } from 'lucide-react';
 import { format, startOfDay, endOfDay, subDays } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
+import { ModernPageHeader, ModernStatCard, ModernCard, ModernEmptyState } from './common';
 
 export function ReportsPage() {
   const [startDate, setStartDate] = useState(format(subDays(new Date(), 7), 'yyyy-MM-dd'));
@@ -101,186 +101,195 @@ export function ReportsPage() {
     fiado: 'Fiado',
   };
 
+  const formatCurrency = (value: number) => {
+    return `R$ ${value.toFixed(2).replace('.', ',')}`;
+  };
+
   return (
-    <div className="p-6 space-y-6 overflow-auto h-full">
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-        <h1 className="text-2xl font-bold">Relatórios</h1>
-        
-        <div className="flex items-center gap-4">
-          <div className="flex items-center gap-2">
-            <Label htmlFor="startDate" className="text-sm whitespace-nowrap">De:</Label>
-            <Input
-              id="startDate"
-              type="date"
-              value={startDate}
-              onChange={(e) => setStartDate(e.target.value)}
-              className="w-40"
-            />
-          </div>
-          <div className="flex items-center gap-2">
-            <Label htmlFor="endDate" className="text-sm whitespace-nowrap">Até:</Label>
-            <Input
-              id="endDate"
-              type="date"
-              value={endDate}
-              onChange={(e) => setEndDate(e.target.value)}
-              className="w-40"
-            />
-          </div>
+    <div className="p-6 space-y-6 animate-fade-in h-full overflow-auto">
+      <ModernPageHeader
+        title="Relatórios"
+        subtitle="Análise de vendas e desempenho"
+        icon={BarChart3}
+        actions={
+          <Button variant="outline" className="gap-2">
+            <Download className="h-4 w-4" />
+            Exportar
+          </Button>
+        }
+      />
+
+      {/* Date Filters */}
+      <div className="flex flex-wrap items-center gap-4 p-4 bg-muted/30 rounded-xl border border-border/50">
+        <Calendar className="h-5 w-5 text-muted-foreground" />
+        <div className="flex items-center gap-2">
+          <Label htmlFor="startDate" className="text-sm whitespace-nowrap text-muted-foreground">De:</Label>
+          <Input
+            id="startDate"
+            type="date"
+            value={startDate}
+            onChange={(e) => setStartDate(e.target.value)}
+            className="w-40"
+          />
+        </div>
+        <div className="flex items-center gap-2">
+          <Label htmlFor="endDate" className="text-sm whitespace-nowrap text-muted-foreground">Até:</Label>
+          <Input
+            id="endDate"
+            type="date"
+            value={endDate}
+            onChange={(e) => setEndDate(e.target.value)}
+            className="w-40"
+          />
         </div>
       </div>
 
       {/* Stats Cards */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between pb-2">
-            <CardTitle className="text-sm font-medium">Total de Vendas</CardTitle>
-            <BarChart3 className="w-4 h-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{totalSales}</div>
-            <p className="text-xs text-muted-foreground">vendas no período</p>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between pb-2">
-            <CardTitle className="text-sm font-medium">Faturamento</CardTitle>
-            <DollarSign className="w-4 h-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">
-              R$ {totalRevenue.toFixed(2).replace('.', ',')}
-            </div>
-            <p className="text-xs text-muted-foreground">total no período</p>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between pb-2">
-            <CardTitle className="text-sm font-medium">Ticket Médio</CardTitle>
-            <TrendingUp className="w-4 h-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">
-              R$ {averageTicket.toFixed(2).replace('.', ',')}
-            </div>
-            <p className="text-xs text-muted-foreground">por venda</p>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between pb-2">
-            <CardTitle className="text-sm font-medium">Produtos Vendidos</CardTitle>
-            <Package className="w-4 h-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">
-              {topProducts?.reduce((sum, p) => sum + p.quantity, 0).toFixed(0) || 0}
-            </div>
-            <p className="text-xs text-muted-foreground">unidades</p>
-          </CardContent>
-        </Card>
+        <ModernStatCard
+          title="Total de Vendas"
+          value={totalSales}
+          icon={BarChart3}
+          variant="blue"
+        />
+        <ModernStatCard
+          title="Faturamento"
+          value={formatCurrency(totalRevenue)}
+          icon={DollarSign}
+          variant="green"
+        />
+        <ModernStatCard
+          title="Ticket Médio"
+          value={formatCurrency(averageTicket)}
+          icon={TrendingUp}
+          variant="purple"
+        />
+        <ModernStatCard
+          title="Produtos Vendidos"
+          value={topProducts?.reduce((sum, p) => sum + p.quantity, 0).toFixed(0) || '0'}
+          icon={Package}
+          variant="amber"
+        />
       </div>
 
       <Tabs defaultValue="payments" className="space-y-4">
-        <TabsList>
+        <TabsList className="bg-muted/50 p-1">
           <TabsTrigger value="payments">Por Forma de Pagamento</TabsTrigger>
           <TabsTrigger value="products">Produtos Mais Vendidos</TabsTrigger>
         </TabsList>
 
         <TabsContent value="payments">
-          <Card>
-            <CardHeader>
-              <CardTitle>Vendas por Forma de Pagamento</CardTitle>
-            </CardHeader>
-            <CardContent>
-              {loadingSales ? (
-                <div className="flex justify-center py-8">
-                  <Loader2 className="w-6 h-6 animate-spin" />
-                </div>
-              ) : (
-                <Table>
-                  <TableHeader>
-                    <TableRow>
-                      <TableHead>Forma de Pagamento</TableHead>
-                      <TableHead className="text-right">Total</TableHead>
-                      <TableHead className="text-right">%</TableHead>
-                    </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    {Object.entries(paymentTotals).map(([method, total]) => (
-                      <TableRow key={method}>
-                        <TableCell>{paymentMethodNames[method] || method}</TableCell>
-                        <TableCell className="text-right tabular-nums">
-                          R$ {total.toFixed(2).replace('.', ',')}
-                        </TableCell>
-                        <TableCell className="text-right tabular-nums">
+          <ModernCard noPadding>
+            <div className="p-4 border-b border-border/50">
+              <h3 className="font-semibold text-foreground">Vendas por Forma de Pagamento</h3>
+            </div>
+            {loadingSales ? (
+              <div className="flex justify-center py-8">
+                <Loader2 className="w-6 h-6 animate-spin text-primary" />
+              </div>
+            ) : (
+              <div className="overflow-x-auto">
+                <table className="w-full">
+                  <thead>
+                    <tr className="border-b border-border bg-muted/30">
+                      <th className="text-left p-4 font-medium text-muted-foreground text-sm">Forma de Pagamento</th>
+                      <th className="text-right p-4 font-medium text-muted-foreground text-sm">Total</th>
+                      <th className="text-right p-4 font-medium text-muted-foreground text-sm">%</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {Object.entries(paymentTotals).map(([method, total], index) => (
+                      <tr 
+                        key={method} 
+                        className="border-b border-border/50 last:border-0 hover:bg-muted/30 transition-colors"
+                        style={{ animationDelay: `${index * 30}ms` }}
+                      >
+                        <td className="p-4">
+                          <Badge variant="secondary">{paymentMethodNames[method] || method}</Badge>
+                        </td>
+                        <td className="p-4 text-right tabular-nums font-medium">
+                          {formatCurrency(total)}
+                        </td>
+                        <td className="p-4 text-right tabular-nums text-muted-foreground">
                           {totalRevenue > 0 ? ((total / totalRevenue) * 100).toFixed(1) : 0}%
-                        </TableCell>
-                      </TableRow>
+                        </td>
+                      </tr>
                     ))}
                     {Object.keys(paymentTotals).length === 0 && (
-                      <TableRow>
-                        <TableCell colSpan={3} className="text-center text-muted-foreground py-8">
-                          Nenhuma venda no período
-                        </TableCell>
-                      </TableRow>
+                      <tr>
+                        <td colSpan={3}>
+                          <ModernEmptyState
+                            icon={DollarSign}
+                            title="Nenhuma venda no período"
+                          />
+                        </td>
+                      </tr>
                     )}
-                  </TableBody>
-                </Table>
-              )}
-            </CardContent>
-          </Card>
+                  </tbody>
+                </table>
+              </div>
+            )}
+          </ModernCard>
         </TabsContent>
 
         <TabsContent value="products">
-          <Card>
-            <CardHeader>
-              <CardTitle>Top 10 Produtos Mais Vendidos</CardTitle>
-            </CardHeader>
-            <CardContent>
-              {loadingProducts ? (
-                <div className="flex justify-center py-8">
-                  <Loader2 className="w-6 h-6 animate-spin" />
-                </div>
-              ) : (
-                <Table>
-                  <TableHeader>
-                    <TableRow>
-                      <TableHead>#</TableHead>
-                      <TableHead>Código</TableHead>
-                      <TableHead>Produto</TableHead>
-                      <TableHead className="text-right">Quantidade</TableHead>
-                      <TableHead className="text-right">Total</TableHead>
-                    </TableRow>
-                  </TableHeader>
-                  <TableBody>
+          <ModernCard noPadding>
+            <div className="p-4 border-b border-border/50">
+              <h3 className="font-semibold text-foreground">Top 10 Produtos Mais Vendidos</h3>
+            </div>
+            {loadingProducts ? (
+              <div className="flex justify-center py-8">
+                <Loader2 className="w-6 h-6 animate-spin text-primary" />
+              </div>
+            ) : (
+              <div className="overflow-x-auto">
+                <table className="w-full">
+                  <thead>
+                    <tr className="border-b border-border bg-muted/30">
+                      <th className="text-left p-4 font-medium text-muted-foreground text-sm">#</th>
+                      <th className="text-left p-4 font-medium text-muted-foreground text-sm">Código</th>
+                      <th className="text-left p-4 font-medium text-muted-foreground text-sm">Produto</th>
+                      <th className="text-right p-4 font-medium text-muted-foreground text-sm">Quantidade</th>
+                      <th className="text-right p-4 font-medium text-muted-foreground text-sm">Total</th>
+                    </tr>
+                  </thead>
+                  <tbody>
                     {topProducts?.map((product, index) => (
-                      <TableRow key={product.code}>
-                        <TableCell>{index + 1}</TableCell>
-                        <TableCell className="font-mono">{product.code}</TableCell>
-                        <TableCell>{product.name}</TableCell>
-                        <TableCell className="text-right tabular-nums">
+                      <tr 
+                        key={product.code} 
+                        className="border-b border-border/50 last:border-0 hover:bg-muted/30 transition-colors"
+                        style={{ animationDelay: `${index * 30}ms` }}
+                      >
+                        <td className="p-4">
+                          <span className="w-6 h-6 rounded-full bg-primary/10 text-primary text-xs font-medium flex items-center justify-center">
+                            {index + 1}
+                          </span>
+                        </td>
+                        <td className="p-4 font-mono text-sm text-muted-foreground">{product.code}</td>
+                        <td className="p-4 font-medium">{product.name}</td>
+                        <td className="p-4 text-right tabular-nums">
                           {product.quantity.toFixed(product.quantity % 1 !== 0 ? 3 : 0)}
-                        </TableCell>
-                        <TableCell className="text-right tabular-nums">
-                          R$ {product.total.toFixed(2).replace('.', ',')}
-                        </TableCell>
-                      </TableRow>
+                        </td>
+                        <td className="p-4 text-right tabular-nums font-medium">
+                          {formatCurrency(product.total)}
+                        </td>
+                      </tr>
                     ))}
                     {(!topProducts || topProducts.length === 0) && (
-                      <TableRow>
-                        <TableCell colSpan={5} className="text-center text-muted-foreground py-8">
-                          Nenhuma venda no período
-                        </TableCell>
-                      </TableRow>
+                      <tr>
+                        <td colSpan={5}>
+                          <ModernEmptyState
+                            icon={Package}
+                            title="Nenhuma venda no período"
+                          />
+                        </td>
+                      </tr>
                     )}
-                  </TableBody>
-                </Table>
-              )}
-            </CardContent>
-          </Card>
+                  </tbody>
+                </table>
+              </div>
+            )}
+          </ModernCard>
         </TabsContent>
       </Tabs>
     </div>

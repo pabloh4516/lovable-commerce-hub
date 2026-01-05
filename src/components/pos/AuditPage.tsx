@@ -1,15 +1,13 @@
 import { useState } from 'react';
-import { Search, Filter, Calendar, User, FileText, RefreshCw } from 'lucide-react';
+import { Search, Filter, Calendar, User, FileText, RefreshCw, Shield } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { useAuditLogs } from '@/hooks/useAuditLog';
 import { useStoreContext } from '@/contexts/StoreContext';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
+import { ModernPageHeader, ModernStatCard, ModernCard, ModernEmptyState } from './common';
 
 export function AuditPage() {
   const { currentStore } = useStoreContext();
@@ -25,13 +23,13 @@ export function AuditPage() {
 
   const getActionColor = (action: string) => {
     if (action.includes('create') || action.includes('login')) {
-      return 'bg-emerald-500/10 text-emerald-500';
+      return 'bg-emerald-500/10 text-emerald-600 border-emerald-500/20';
     }
     if (action.includes('delete') || action.includes('cancel')) {
-      return 'bg-red-500/10 text-red-500';
+      return 'bg-red-500/10 text-red-600 border-red-500/20';
     }
     if (action.includes('update')) {
-      return 'bg-blue-500/10 text-blue-500';
+      return 'bg-blue-500/10 text-blue-600 border-blue-500/20';
     }
     return 'bg-muted text-muted-foreground';
   };
@@ -87,68 +85,43 @@ export function AuditPage() {
   }).length;
 
   return (
-    <div className="h-full flex flex-col bg-background">
-      {/* Header */}
-      <div className="p-6 border-b border-border">
-        <div className="flex items-center justify-between mb-6">
-          <div>
-            <h1 className="text-2xl font-bold">Auditoria do Sistema</h1>
-            <p className="text-muted-foreground">Histórico de ações e eventos do sistema</p>
-          </div>
-          <Button variant="outline" onClick={() => refetch()}>
-            <RefreshCw className="h-4 w-4 mr-2" />
+    <div className="p-6 space-y-6 animate-fade-in h-full overflow-auto">
+      <ModernPageHeader
+        title="Auditoria do Sistema"
+        subtitle="Histórico de ações e eventos do sistema"
+        icon={Shield}
+        actions={
+          <Button variant="outline" onClick={() => refetch()} className="gap-2">
+            <RefreshCw className="h-4 w-4" />
             Atualizar
           </Button>
-        </div>
+        }
+      />
 
-        {/* Stats */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-          <Card>
-            <CardContent className="p-4">
-              <div className="flex items-center gap-3">
-                <div className="p-2 rounded-lg bg-primary/10">
-                  <FileText className="h-5 w-5 text-primary" />
-                </div>
-                <div>
-                  <p className="text-2xl font-bold">{logs.length}</p>
-                  <p className="text-sm text-muted-foreground">Total de Registros</p>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-          <Card>
-            <CardContent className="p-4">
-              <div className="flex items-center gap-3">
-                <div className="p-2 rounded-lg bg-emerald-500/10">
-                  <Calendar className="h-5 w-5 text-emerald-500" />
-                </div>
-                <div>
-                  <p className="text-2xl font-bold">{todayLogs}</p>
-                  <p className="text-sm text-muted-foreground">Registros Hoje</p>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-          <Card>
-            <CardContent className="p-4">
-              <div className="flex items-center gap-3">
-                <div className="p-2 rounded-lg bg-blue-500/10">
-                  <User className="h-5 w-5 text-blue-500" />
-                </div>
-                <div>
-                  <p className="text-2xl font-bold">
-                    {new Set(logs.map(l => l.user_id).filter(Boolean)).size}
-                  </p>
-                  <p className="text-sm text-muted-foreground">Usuários Ativos</p>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-        </div>
+      {/* Stats */}
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+        <ModernStatCard
+          title="Total de Registros"
+          value={logs.length}
+          icon={FileText}
+          variant="blue"
+        />
+        <ModernStatCard
+          title="Registros Hoje"
+          value={todayLogs}
+          icon={Calendar}
+          variant="green"
+        />
+        <ModernStatCard
+          title="Usuários Ativos"
+          value={new Set(logs.map(l => l.user_id).filter(Boolean)).size}
+          icon={User}
+          variant="purple"
+        />
       </div>
 
       {/* Filters */}
-      <div className="p-6 flex gap-4 flex-wrap">
+      <div className="flex gap-4 flex-wrap">
         <Select value={actionFilter} onValueChange={setActionFilter}>
           <SelectTrigger className="w-48">
             <Filter className="h-4 w-4 mr-2" />
@@ -180,48 +153,55 @@ export function AuditPage() {
       </div>
 
       {/* Table */}
-      <div className="flex-1 overflow-auto px-6 pb-6">
-        <Card>
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>Data/Hora</TableHead>
-                <TableHead>Ação</TableHead>
-                <TableHead>Entidade</TableHead>
-                <TableHead>Detalhes</TableHead>
-                <TableHead>IP</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
+      <ModernCard noPadding>
+        <div className="overflow-x-auto">
+          <table className="w-full">
+            <thead>
+              <tr className="border-b border-border bg-muted/30">
+                <th className="text-left p-4 font-medium text-muted-foreground text-sm">Data/Hora</th>
+                <th className="text-left p-4 font-medium text-muted-foreground text-sm">Ação</th>
+                <th className="text-left p-4 font-medium text-muted-foreground text-sm">Entidade</th>
+                <th className="text-left p-4 font-medium text-muted-foreground text-sm">Detalhes</th>
+                <th className="text-left p-4 font-medium text-muted-foreground text-sm">IP</th>
+              </tr>
+            </thead>
+            <tbody>
               {isLoading ? (
-                <TableRow>
-                  <TableCell colSpan={5} className="text-center py-8 text-muted-foreground">
+                <tr>
+                  <td colSpan={5} className="text-center py-8 text-muted-foreground">
                     Carregando registros...
-                  </TableCell>
-                </TableRow>
+                  </td>
+                </tr>
               ) : logs.length === 0 ? (
-                <TableRow>
-                  <TableCell colSpan={5} className="text-center py-8 text-muted-foreground">
-                    Nenhum registro encontrado
-                  </TableCell>
-                </TableRow>
+                <tr>
+                  <td colSpan={5}>
+                    <ModernEmptyState
+                      icon={FileText}
+                      title="Nenhum registro encontrado"
+                    />
+                  </td>
+                </tr>
               ) : (
-                logs.map((log) => (
-                  <TableRow key={log.id}>
-                    <TableCell className="text-sm">
+                logs.map((log, index) => (
+                  <tr 
+                    key={log.id}
+                    className="border-b border-border/50 last:border-0 hover:bg-muted/30 transition-colors"
+                    style={{ animationDelay: `${index * 20}ms` }}
+                  >
+                    <td className="p-4 text-sm text-muted-foreground">
                       {log.created_at && format(new Date(log.created_at), "dd/MM/yyyy HH:mm:ss", { locale: ptBR })}
-                    </TableCell>
-                    <TableCell>
+                    </td>
+                    <td className="p-4">
                       <Badge className={getActionColor(log.action)}>
                         {getActionLabel(log.action)}
                       </Badge>
-                    </TableCell>
-                    <TableCell>
-                      <Badge variant="outline">
+                    </td>
+                    <td className="p-4">
+                      <Badge variant="secondary">
                         {getEntityLabel(log.entity_type)}
                       </Badge>
-                    </TableCell>
-                    <TableCell className="max-w-[300px]">
+                    </td>
+                    <td className="p-4 max-w-[300px]">
                       {log.reason && (
                         <p className="text-sm text-muted-foreground truncate">{log.reason}</p>
                       )}
@@ -230,17 +210,17 @@ export function AuditPage() {
                           ID: {log.entity_id.slice(0, 8)}...
                         </p>
                       )}
-                    </TableCell>
-                    <TableCell className="text-sm text-muted-foreground font-mono">
+                    </td>
+                    <td className="p-4 text-sm text-muted-foreground font-mono">
                       {log.ip_address || '-'}
-                    </TableCell>
-                  </TableRow>
+                    </td>
+                  </tr>
                 ))
               )}
-            </TableBody>
-          </Table>
-        </Card>
-      </div>
+            </tbody>
+          </table>
+        </div>
+      </ModernCard>
     </div>
   );
 }

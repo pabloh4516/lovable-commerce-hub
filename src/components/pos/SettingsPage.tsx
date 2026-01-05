@@ -1,5 +1,4 @@
 import { useState, useEffect } from 'react';
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -17,8 +16,10 @@ import {
   Palette, 
   Bell,
   Printer,
-  CreditCard
+  CreditCard,
+  Settings
 } from 'lucide-react';
+import { ModernPageHeader, ModernCard } from './common';
 
 export function SettingsPage() {
   const { data: settings, isLoading } = useStoreSettings();
@@ -68,22 +69,21 @@ export function SettingsPage() {
   if (isLoading) {
     return (
       <div className="flex items-center justify-center h-full">
-        <Loader2 className="w-8 h-8 animate-spin" />
+        <Loader2 className="w-8 h-8 animate-spin text-primary" />
       </div>
     );
   }
 
   return (
-    <div className="p-6 space-y-6 overflow-auto h-full">
-      <div>
-        <h1 className="text-2xl font-bold">Configurações</h1>
-        <p className="text-muted-foreground">
-          Gerencie as configurações da sua loja e sistema
-        </p>
-      </div>
+    <div className="p-6 space-y-6 animate-fade-in h-full overflow-auto">
+      <ModernPageHeader
+        title="Configurações"
+        subtitle="Gerencie as configurações da sua loja e sistema"
+        icon={Settings}
+      />
 
       <Tabs defaultValue="store" className="space-y-6">
-        <TabsList className="grid w-full max-w-2xl grid-cols-4">
+        <TabsList className="bg-muted/50 p-1">
           <TabsTrigger value="store" className="gap-2">
             <Store className="w-4 h-4" />
             Loja
@@ -104,123 +104,119 @@ export function SettingsPage() {
 
         {/* Store Settings */}
         <TabsContent value="store" className="space-y-6 max-w-3xl">
-          <Card>
-            <CardHeader>
-              <div className="flex items-center gap-3">
-                <div className="w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center">
-                  <Store className="w-5 h-5 text-primary" />
+          <ModernCard>
+            <div className="flex items-center gap-3 mb-6">
+              <div className="w-10 h-10 rounded-lg bg-gradient-to-br from-primary/20 to-primary/5 flex items-center justify-center border border-primary/10">
+                <Store className="w-5 h-5 text-primary" />
+              </div>
+              <div>
+                <h3 className="font-semibold text-foreground">Dados da Loja</h3>
+                <p className="text-sm text-muted-foreground">Informações que aparecem nos comprovantes</p>
+              </div>
+            </div>
+            
+            <form onSubmit={handleSubmit} className="space-y-4">
+              <div className="grid grid-cols-2 gap-4">
+                <div className="col-span-2 space-y-2">
+                  <Label htmlFor="name">Nome da Loja</Label>
+                  <Input
+                    id="name"
+                    value={formData.name}
+                    onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                    placeholder="Minha Loja"
+                    disabled={!isAdmin}
+                  />
                 </div>
-                <div>
-                  <CardTitle>Dados da Loja</CardTitle>
-                  <CardDescription>Informações que aparecem nos comprovantes</CardDescription>
+
+                <div className="space-y-2">
+                  <Label htmlFor="cnpj">CNPJ</Label>
+                  <Input
+                    id="cnpj"
+                    value={formData.cnpj}
+                    onChange={(e) => setFormData({ ...formData, cnpj: e.target.value })}
+                    placeholder="00.000.000/0001-00"
+                    disabled={!isAdmin}
+                  />
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="phone">Telefone</Label>
+                  <Input
+                    id="phone"
+                    value={formData.phone}
+                    onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
+                    placeholder="(11) 99999-9999"
+                    disabled={!isAdmin}
+                  />
+                </div>
+
+                <div className="col-span-2 space-y-2">
+                  <Label htmlFor="address">Endereço</Label>
+                  <Input
+                    id="address"
+                    value={formData.address}
+                    onChange={(e) => setFormData({ ...formData, address: e.target.value })}
+                    placeholder="Rua das Flores, 123 - Centro"
+                    disabled={!isAdmin}
+                  />
+                </div>
+
+                <div className="col-span-2 space-y-2">
+                  <Label htmlFor="email">Email</Label>
+                  <Input
+                    id="email"
+                    type="email"
+                    value={formData.email}
+                    onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+                    placeholder="contato@loja.com"
+                    disabled={!isAdmin}
+                  />
                 </div>
               </div>
-            </CardHeader>
-            <CardContent>
-              <form onSubmit={handleSubmit} className="space-y-4">
-                <div className="grid grid-cols-2 gap-4">
-                  <div className="col-span-2 space-y-2">
-                    <Label htmlFor="name">Nome da Loja</Label>
-                    <Input
-                      id="name"
-                      value={formData.name}
-                      onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                      placeholder="Minha Loja"
-                      disabled={!isAdmin}
-                    />
-                  </div>
 
-                  <div className="space-y-2">
-                    <Label htmlFor="cnpj">CNPJ</Label>
-                    <Input
-                      id="cnpj"
-                      value={formData.cnpj}
-                      onChange={(e) => setFormData({ ...formData, cnpj: e.target.value })}
-                      placeholder="00.000.000/0001-00"
-                      disabled={!isAdmin}
-                    />
-                  </div>
+              {isAdmin && (
+                <Button type="submit" disabled={updateSettings.isPending} className="gap-2">
+                  {updateSettings.isPending ? (
+                    <>
+                      <Loader2 className="w-4 h-4 animate-spin" />
+                      Salvando...
+                    </>
+                  ) : (
+                    <>
+                      <Save className="w-4 h-4" />
+                      Salvar Alterações
+                    </>
+                  )}
+                </Button>
+              )}
 
-                  <div className="space-y-2">
-                    <Label htmlFor="phone">Telefone</Label>
-                    <Input
-                      id="phone"
-                      value={formData.phone}
-                      onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
-                      placeholder="(11) 99999-9999"
-                      disabled={!isAdmin}
-                    />
-                  </div>
-
-                  <div className="col-span-2 space-y-2">
-                    <Label htmlFor="address">Endereço</Label>
-                    <Input
-                      id="address"
-                      value={formData.address}
-                      onChange={(e) => setFormData({ ...formData, address: e.target.value })}
-                      placeholder="Rua das Flores, 123 - Centro"
-                      disabled={!isAdmin}
-                    />
-                  </div>
-
-                  <div className="col-span-2 space-y-2">
-                    <Label htmlFor="email">Email</Label>
-                    <Input
-                      id="email"
-                      type="email"
-                      value={formData.email}
-                      onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-                      placeholder="contato@loja.com"
-                      disabled={!isAdmin}
-                    />
-                  </div>
-                </div>
-
-                {isAdmin && (
-                  <Button type="submit" disabled={updateSettings.isPending} className="gap-2">
-                    {updateSettings.isPending ? (
-                      <>
-                        <Loader2 className="w-4 h-4 animate-spin" />
-                        Salvando...
-                      </>
-                    ) : (
-                      <>
-                        <Save className="w-4 h-4" />
-                        Salvar Alterações
-                      </>
-                    )}
-                  </Button>
-                )}
-
-                {!isAdmin && (
-                  <p className="text-sm text-muted-foreground">
-                    Apenas administradores podem editar as configurações.
-                  </p>
-                )}
-              </form>
-            </CardContent>
-          </Card>
+              {!isAdmin && (
+                <p className="text-sm text-muted-foreground">
+                  Apenas administradores podem editar as configurações.
+                </p>
+              )}
+            </form>
+          </ModernCard>
         </TabsContent>
 
         {/* Receipt Settings */}
         <TabsContent value="receipt" className="space-y-6 max-w-3xl">
-          <Card>
-            <CardHeader>
-              <div className="flex items-center gap-3">
-                <div className="w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center">
-                  <Receipt className="w-5 h-5 text-primary" />
-                </div>
-                <div>
-                  <CardTitle>Configurações de Recibo</CardTitle>
-                  <CardDescription>Personalize os comprovantes de venda</CardDescription>
-                </div>
+          <ModernCard>
+            <div className="flex items-center gap-3 mb-6">
+              <div className="w-10 h-10 rounded-lg bg-gradient-to-br from-primary/20 to-primary/5 flex items-center justify-center border border-primary/10">
+                <Receipt className="w-5 h-5 text-primary" />
               </div>
-            </CardHeader>
-            <CardContent className="space-y-6">
+              <div>
+                <h3 className="font-semibold text-foreground">Configurações de Recibo</h3>
+                <p className="text-sm text-muted-foreground">Personalize os comprovantes de venda</p>
+              </div>
+            </div>
+            
+            <div className="space-y-6">
               <div className="space-y-4">
-                <h3 className="font-medium">Informações no Recibo</h3>
+                <h4 className="font-medium text-sm text-muted-foreground uppercase tracking-wide">Informações no Recibo</h4>
                 
-                <div className="flex items-center justify-between">
+                <div className="flex items-center justify-between p-3 rounded-lg bg-muted/30">
                   <div>
                     <Label>Exibir Logo</Label>
                     <p className="text-sm text-muted-foreground">Mostrar logotipo da loja no topo</p>
@@ -234,9 +230,7 @@ export function SettingsPage() {
                   />
                 </div>
 
-                <Separator />
-
-                <div className="flex items-center justify-between">
+                <div className="flex items-center justify-between p-3 rounded-lg bg-muted/30">
                   <div>
                     <Label>Exibir Endereço</Label>
                     <p className="text-sm text-muted-foreground">Mostrar endereço completo</p>
@@ -250,9 +244,7 @@ export function SettingsPage() {
                   />
                 </div>
 
-                <Separator />
-
-                <div className="flex items-center justify-between">
+                <div className="flex items-center justify-between p-3 rounded-lg bg-muted/30">
                   <div>
                     <Label>Exibir Telefone</Label>
                     <p className="text-sm text-muted-foreground">Mostrar número de contato</p>
@@ -270,12 +262,12 @@ export function SettingsPage() {
               <Separator />
 
               <div className="space-y-4">
-                <h3 className="font-medium flex items-center gap-2">
+                <h4 className="font-medium text-sm text-muted-foreground uppercase tracking-wide flex items-center gap-2">
                   <Printer className="w-4 h-4" />
                   Impressão
-                </h3>
+                </h4>
 
-                <div className="flex items-center justify-between">
+                <div className="flex items-center justify-between p-3 rounded-lg bg-muted/30">
                   <div>
                     <Label>Imprimir Automaticamente</Label>
                     <p className="text-sm text-muted-foreground">Imprimir recibo após cada venda</p>
@@ -311,32 +303,31 @@ export function SettingsPage() {
                   Salvar Configurações
                 </Button>
               )}
-            </CardContent>
-          </Card>
+            </div>
+          </ModernCard>
         </TabsContent>
 
         {/* System Settings */}
         <TabsContent value="system" className="space-y-6 max-w-3xl">
-          <Card>
-            <CardHeader>
-              <div className="flex items-center gap-3">
-                <div className="w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center">
-                  <Settings2 className="w-5 h-5 text-primary" />
-                </div>
-                <div>
-                  <CardTitle>Configurações do Sistema</CardTitle>
-                  <CardDescription>Ajuste o comportamento do PDV</CardDescription>
-                </div>
+          <ModernCard>
+            <div className="flex items-center gap-3 mb-6">
+              <div className="w-10 h-10 rounded-lg bg-gradient-to-br from-primary/20 to-primary/5 flex items-center justify-center border border-primary/10">
+                <Settings2 className="w-5 h-5 text-primary" />
               </div>
-            </CardHeader>
-            <CardContent className="space-y-6">
+              <div>
+                <h3 className="font-semibold text-foreground">Configurações do Sistema</h3>
+                <p className="text-sm text-muted-foreground">Ajuste o comportamento do PDV</p>
+              </div>
+            </div>
+            
+            <div className="space-y-6">
               <div className="space-y-4">
-                <h3 className="font-medium flex items-center gap-2">
+                <h4 className="font-medium text-sm text-muted-foreground uppercase tracking-wide flex items-center gap-2">
                   <Palette className="w-4 h-4" />
                   Interface
-                </h3>
+                </h4>
 
-                <div className="flex items-center justify-between">
+                <div className="flex items-center justify-between p-3 rounded-lg bg-muted/30">
                   <div>
                     <Label>Sons do Sistema</Label>
                     <p className="text-sm text-muted-foreground">Sons ao adicionar itens e finalizar vendas</p>
@@ -353,12 +344,12 @@ export function SettingsPage() {
               <Separator />
 
               <div className="space-y-4">
-                <h3 className="font-medium flex items-center gap-2">
+                <h4 className="font-medium text-sm text-muted-foreground uppercase tracking-wide flex items-center gap-2">
                   <Bell className="w-4 h-4" />
                   Notificações
-                </h3>
+                </h4>
 
-                <div className="flex items-center justify-between">
+                <div className="flex items-center justify-between p-3 rounded-lg bg-muted/30">
                   <div>
                     <Label>Alertas de Sistema</Label>
                     <p className="text-sm text-muted-foreground">Notificações de estoque baixo e outros alertas</p>
@@ -408,98 +399,90 @@ export function SettingsPage() {
                   Salvar Configurações
                 </Button>
               )}
-            </CardContent>
-          </Card>
+            </div>
+          </ModernCard>
         </TabsContent>
 
         {/* Payment Settings */}
         <TabsContent value="payment" className="space-y-6 max-w-3xl">
-          <Card>
-            <CardHeader>
-              <div className="flex items-center gap-3">
-                <div className="w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center">
-                  <CreditCard className="w-5 h-5 text-primary" />
-                </div>
-                <div>
-                  <CardTitle>Formas de Pagamento</CardTitle>
-                  <CardDescription>Configure as formas de pagamento aceitas</CardDescription>
-                </div>
+          <ModernCard>
+            <div className="flex items-center gap-3 mb-6">
+              <div className="w-10 h-10 rounded-lg bg-gradient-to-br from-primary/20 to-primary/5 flex items-center justify-center border border-primary/10">
+                <CreditCard className="w-5 h-5 text-primary" />
               </div>
-            </CardHeader>
-            <CardContent className="space-y-6">
-              <div className="space-y-4">
-                <div className="flex items-center justify-between p-4 bg-secondary rounded-lg">
-                  <div className="flex items-center gap-3">
-                    <div className="w-10 h-10 rounded-lg bg-success/10 flex items-center justify-center">
-                      💵
-                    </div>
-                    <div>
-                      <Label className="text-base">Dinheiro</Label>
-                      <p className="text-sm text-muted-foreground">Pagamento em espécie</p>
-                    </div>
+              <div>
+                <h3 className="font-semibold text-foreground">Formas de Pagamento</h3>
+                <p className="text-sm text-muted-foreground">Configure as formas de pagamento aceitas</p>
+              </div>
+            </div>
+            
+            <div className="space-y-4">
+              <div className="flex items-center justify-between p-4 rounded-lg bg-muted/30 border border-border/50">
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 rounded-lg bg-emerald-500/10 flex items-center justify-center">
+                    💵
                   </div>
-                  <Switch checked disabled />
-                </div>
-
-                <div className="flex items-center justify-between p-4 bg-secondary rounded-lg">
-                  <div className="flex items-center gap-3">
-                    <div className="w-10 h-10 rounded-lg bg-[#32BCAD]/10 flex items-center justify-center">
-                      📱
-                    </div>
-                    <div>
-                      <Label className="text-base">PIX</Label>
-                      <p className="text-sm text-muted-foreground">Pagamento instantâneo</p>
-                    </div>
+                  <div>
+                    <Label className="text-base">Dinheiro</Label>
+                    <p className="text-sm text-muted-foreground">Pagamento em espécie</p>
                   </div>
-                  <Switch checked disabled={!isAdmin} />
                 </div>
-
-                <div className="flex items-center justify-between p-4 bg-secondary rounded-lg">
-                  <div className="flex items-center gap-3">
-                    <div className="w-10 h-10 rounded-lg bg-blue-500/10 flex items-center justify-center">
-                      💳
-                    </div>
-                    <div>
-                      <Label className="text-base">Cartão de Crédito</Label>
-                      <p className="text-sm text-muted-foreground">Parcelado ou à vista</p>
-                    </div>
-                  </div>
-                  <Switch checked disabled={!isAdmin} />
-                </div>
-
-                <div className="flex items-center justify-between p-4 bg-secondary rounded-lg">
-                  <div className="flex items-center gap-3">
-                    <div className="w-10 h-10 rounded-lg bg-orange-500/10 flex items-center justify-center">
-                      💳
-                    </div>
-                    <div>
-                      <Label className="text-base">Cartão de Débito</Label>
-                      <p className="text-sm text-muted-foreground">Débito à vista</p>
-                    </div>
-                  </div>
-                  <Switch checked disabled={!isAdmin} />
-                </div>
-
-                <div className="flex items-center justify-between p-4 bg-secondary rounded-lg">
-                  <div className="flex items-center gap-3">
-                    <div className="w-10 h-10 rounded-lg bg-warning/10 flex items-center justify-center">
-                      📝
-                    </div>
-                    <div>
-                      <Label className="text-base">Fiado</Label>
-                      <p className="text-sm text-muted-foreground">Venda a prazo para clientes</p>
-                    </div>
-                  </div>
-                  <Switch checked disabled={!isAdmin} />
-                </div>
+                <Switch checked disabled />
               </div>
 
-              <p className="text-sm text-muted-foreground">
-                Todas as formas de pagamento estão ativas. A configuração de taxas e integrações 
-                com operadoras será adicionada em breve.
-              </p>
-            </CardContent>
-          </Card>
+              <div className="flex items-center justify-between p-4 rounded-lg bg-muted/30 border border-border/50">
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 rounded-lg bg-teal-500/10 flex items-center justify-center">
+                    📱
+                  </div>
+                  <div>
+                    <Label className="text-base">PIX</Label>
+                    <p className="text-sm text-muted-foreground">Pagamento instantâneo</p>
+                  </div>
+                </div>
+                <Switch checked disabled={!isAdmin} />
+              </div>
+
+              <div className="flex items-center justify-between p-4 rounded-lg bg-muted/30 border border-border/50">
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 rounded-lg bg-blue-500/10 flex items-center justify-center">
+                    💳
+                  </div>
+                  <div>
+                    <Label className="text-base">Cartão de Crédito</Label>
+                    <p className="text-sm text-muted-foreground">Até 12x sem juros</p>
+                  </div>
+                </div>
+                <Switch checked disabled={!isAdmin} />
+              </div>
+
+              <div className="flex items-center justify-between p-4 rounded-lg bg-muted/30 border border-border/50">
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 rounded-lg bg-purple-500/10 flex items-center justify-center">
+                    💳
+                  </div>
+                  <div>
+                    <Label className="text-base">Cartão de Débito</Label>
+                    <p className="text-sm text-muted-foreground">Aprovação imediata</p>
+                  </div>
+                </div>
+                <Switch checked disabled={!isAdmin} />
+              </div>
+
+              <div className="flex items-center justify-between p-4 rounded-lg bg-muted/30 border border-border/50">
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 rounded-lg bg-amber-500/10 flex items-center justify-center">
+                    📝
+                  </div>
+                  <div>
+                    <Label className="text-base">Fiado</Label>
+                    <p className="text-sm text-muted-foreground">Requer cliente cadastrado</p>
+                  </div>
+                </div>
+                <Switch checked={false} disabled={!isAdmin} />
+              </div>
+            </div>
+          </ModernCard>
         </TabsContent>
       </Tabs>
     </div>

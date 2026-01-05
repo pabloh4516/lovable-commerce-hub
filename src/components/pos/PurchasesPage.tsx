@@ -1,7 +1,6 @@
 import { useState } from 'react';
 import { 
   Plus, 
-  Search, 
   ShoppingBag,
   Truck,
   Package,
@@ -12,16 +11,7 @@ import {
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from '@/components/ui/table';
 import {
   Dialog,
   DialogContent,
@@ -39,22 +29,21 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { usePurchaseOrders, usePurchaseOrderMutations } from '@/hooks/usePurchaseOrders';
 import { useSuppliers } from '@/hooks/useSuppliers';
-import { useProducts } from '@/hooks/useProducts';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
+import { ModernPageHeader, ModernStatCard, ModernSearchBar, ModernCard, ModernEmptyState } from './common';
 
-const statusConfig: Record<string, { label: string; color: string }> = {
-  pending: { label: 'Pendente', color: 'bg-yellow-500' },
-  approved: { label: 'Aprovado', color: 'bg-blue-500' },
-  partial: { label: 'Recebido Parcial', color: 'bg-orange-500' },
-  received: { label: 'Recebido', color: 'bg-success' },
-  cancelled: { label: 'Cancelado', color: 'bg-muted' },
+const statusConfig: Record<string, { label: string; className: string }> = {
+  pending: { label: 'Pendente', className: 'bg-amber-500/10 text-amber-600 border-amber-500/20' },
+  approved: { label: 'Aprovado', className: 'bg-blue-500/10 text-blue-600 border-blue-500/20' },
+  partial: { label: 'Recebido Parcial', className: 'bg-orange-500/10 text-orange-600 border-orange-500/20' },
+  received: { label: 'Recebido', className: 'bg-emerald-500/10 text-emerald-600 border-emerald-500/20' },
+  cancelled: { label: 'Cancelado', className: 'bg-muted text-muted-foreground' },
 };
 
 export function PurchasesPage() {
   const { data: orders, isLoading } = usePurchaseOrders();
   const { data: suppliers } = useSuppliers();
-  const { data: products } = useProducts();
   const { createPurchaseOrder, updatePurchaseOrder } = usePurchaseOrderMutations();
   
   const [searchQuery, setSearchQuery] = useState('');
@@ -143,169 +132,147 @@ export function PurchasesPage() {
   }
 
   return (
-    <div className="p-6 space-y-6">
-      {/* Header */}
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-2xl font-bold text-foreground">Compras</h1>
-          <p className="text-muted-foreground">Gerencie seus pedidos de compra</p>
-        </div>
-        <Button onClick={() => setShowModal(true)} className="gap-2">
-          <Plus className="w-4 h-4" />
-          Novo Pedido
-        </Button>
-      </div>
+    <div className="p-6 space-y-6 animate-fade-in h-full overflow-auto">
+      <ModernPageHeader
+        title="Compras"
+        subtitle="Gerencie seus pedidos de compra"
+        icon={ShoppingBag}
+        actions={
+          <Button onClick={() => setShowModal(true)} className="gap-2">
+            <Plus className="w-4 h-4" />
+            Novo Pedido
+          </Button>
+        }
+      />
 
       {/* Stats */}
-      <div className="grid grid-cols-4 gap-4">
-        <Card>
-          <CardContent className="p-4">
-            <div className="flex items-center gap-3">
-              <div className="p-2 rounded-lg bg-primary/10">
-                <ShoppingBag className="w-5 h-5 text-primary" />
-              </div>
-              <div>
-                <p className="text-2xl font-bold">{stats.total}</p>
-                <p className="text-sm text-muted-foreground">Total</p>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardContent className="p-4">
-            <div className="flex items-center gap-3">
-              <div className="p-2 rounded-lg bg-yellow-500/10">
-                <FileText className="w-5 h-5 text-yellow-500" />
-              </div>
-              <div>
-                <p className="text-2xl font-bold">{stats.pending}</p>
-                <p className="text-sm text-muted-foreground">Pendentes</p>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardContent className="p-4">
-            <div className="flex items-center gap-3">
-              <div className="p-2 rounded-lg bg-blue-500/10">
-                <Truck className="w-5 h-5 text-blue-500" />
-              </div>
-              <div>
-                <p className="text-2xl font-bold">{stats.approved}</p>
-                <p className="text-sm text-muted-foreground">Aprovados</p>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardContent className="p-4">
-            <div className="flex items-center gap-3">
-              <div className="p-2 rounded-lg bg-success/10">
-                <Package className="w-5 h-5 text-success" />
-              </div>
-              <div>
-                <p className="text-2xl font-bold">{stats.received}</p>
-                <p className="text-sm text-muted-foreground">Recebidos</p>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+        <ModernStatCard
+          title="Total"
+          value={stats.total}
+          icon={ShoppingBag}
+          variant="blue"
+        />
+        <ModernStatCard
+          title="Pendentes"
+          value={stats.pending}
+          icon={FileText}
+          variant="amber"
+        />
+        <ModernStatCard
+          title="Aprovados"
+          value={stats.approved}
+          icon={Truck}
+          variant="purple"
+        />
+        <ModernStatCard
+          title="Recebidos"
+          value={stats.received}
+          icon={Package}
+          variant="green"
+        />
       </div>
 
       {/* Filters */}
-      <Card>
-        <CardContent className="p-4">
-          <div className="flex gap-4">
-            <div className="relative flex-1">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-              <Input
-                placeholder="Buscar por número, fornecedor ou nota fiscal..."
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                className="pl-10"
-              />
-            </div>
-            <Select value={statusFilter} onValueChange={setStatusFilter}>
-              <SelectTrigger className="w-[180px]">
-                <SelectValue placeholder="Status" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">Todos</SelectItem>
-                {Object.entries(statusConfig).map(([key, config]) => (
-                  <SelectItem key={key} value={key}>{config.label}</SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
-        </CardContent>
-      </Card>
+      <div className="flex flex-col sm:flex-row gap-4">
+        <ModernSearchBar
+          value={searchQuery}
+          onChange={setSearchQuery}
+          placeholder="Buscar por número, fornecedor ou nota fiscal..."
+          className="flex-1 max-w-md"
+        />
+        <Select value={statusFilter} onValueChange={setStatusFilter}>
+          <SelectTrigger className="w-[180px]">
+            <SelectValue placeholder="Status" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="all">Todos</SelectItem>
+            {Object.entries(statusConfig).map(([key, config]) => (
+              <SelectItem key={key} value={key}>{config.label}</SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+      </div>
 
       {/* Table */}
-      <Card>
-        <CardContent className="p-0">
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>Pedido</TableHead>
-                <TableHead>Fornecedor</TableHead>
-                <TableHead>Nota Fiscal</TableHead>
-                <TableHead>Data</TableHead>
-                <TableHead>Total</TableHead>
-                <TableHead>Status</TableHead>
-                <TableHead className="w-[100px]">Ações</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
+      <ModernCard noPadding>
+        <div className="overflow-x-auto">
+          <table className="w-full">
+            <thead>
+              <tr className="border-b border-border bg-muted/30">
+                <th className="text-left p-4 font-medium text-muted-foreground text-sm">Pedido</th>
+                <th className="text-left p-4 font-medium text-muted-foreground text-sm">Fornecedor</th>
+                <th className="text-left p-4 font-medium text-muted-foreground text-sm">Nota Fiscal</th>
+                <th className="text-left p-4 font-medium text-muted-foreground text-sm">Data</th>
+                <th className="text-right p-4 font-medium text-muted-foreground text-sm">Total</th>
+                <th className="text-center p-4 font-medium text-muted-foreground text-sm">Status</th>
+                <th className="text-right p-4 font-medium text-muted-foreground text-sm">Ações</th>
+              </tr>
+            </thead>
+            <tbody>
               {filteredOrders.length === 0 ? (
-                <TableRow>
-                  <TableCell colSpan={7} className="text-center py-8 text-muted-foreground">
-                    Nenhum pedido encontrado
-                  </TableCell>
-                </TableRow>
+                <tr>
+                  <td colSpan={7}>
+                    <ModernEmptyState
+                      icon={ShoppingBag}
+                      title="Nenhum pedido encontrado"
+                      description="Crie um novo pedido de compra"
+                    />
+                  </td>
+                </tr>
               ) : (
-                filteredOrders.map((order) => {
+                filteredOrders.map((order, index) => {
                   const status = statusConfig[order.status];
                   
                   return (
-                    <TableRow key={order.id}>
-                      <TableCell className="font-mono font-medium">
-                        #{order.number}
-                      </TableCell>
-                      <TableCell>
-                        {order.supplier?.name || '-'}
-                      </TableCell>
-                      <TableCell>
+                    <tr 
+                      key={order.id}
+                      className="border-b border-border/50 last:border-0 hover:bg-muted/30 transition-colors"
+                      style={{ animationDelay: `${index * 30}ms` }}
+                    >
+                      <td className="p-4">
+                        <span className="font-mono font-medium text-primary">#{order.number}</span>
+                      </td>
+                      <td className="p-4">
+                        <div className="flex items-center gap-3">
+                          <div className="w-9 h-9 rounded-lg bg-gradient-to-br from-primary/10 to-primary/5 flex items-center justify-center border border-primary/10">
+                            <Truck className="h-4 w-4 text-primary" />
+                          </div>
+                          <span className="font-medium">{order.supplier?.name || '-'}</span>
+                        </div>
+                      </td>
+                      <td className="p-4 font-mono text-sm text-muted-foreground">
                         {order.invoice_number || '-'}
-                      </TableCell>
-                      <TableCell>
-                        {format(new Date(order.created_at), 'dd/MM/yyyy')}
-                      </TableCell>
-                      <TableCell className="font-medium">
+                      </td>
+                      <td className="p-4 text-sm text-muted-foreground">
+                        {format(new Date(order.created_at), 'dd/MM/yyyy', { locale: ptBR })}
+                      </td>
+                      <td className="p-4 text-right font-medium tabular-nums">
                         R$ {order.total.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
-                      </TableCell>
-                      <TableCell>
-                        <Badge className={status.color}>{status.label}</Badge>
-                      </TableCell>
-                      <TableCell>
-                        <div className="flex gap-1">
-                          <Button variant="ghost" size="icon">
+                      </td>
+                      <td className="p-4 text-center">
+                        <Badge className={status.className}>{status.label}</Badge>
+                      </td>
+                      <td className="p-4 text-right">
+                        <div className="flex gap-1 justify-end">
+                          <Button variant="ghost" size="icon" className="h-8 w-8">
                             <Edit className="w-4 h-4" />
                           </Button>
                           {order.status === 'approved' && (
-                            <Button variant="ghost" size="icon">
-                              <Check className="w-4 h-4 text-success" />
+                            <Button variant="ghost" size="icon" className="h-8 w-8 text-emerald-500">
+                              <Check className="w-4 h-4" />
                             </Button>
                           )}
                         </div>
-                      </TableCell>
-                    </TableRow>
+                      </td>
+                    </tr>
                   );
                 })
               )}
-            </TableBody>
-          </Table>
-        </CardContent>
-      </Card>
+            </tbody>
+          </table>
+        </div>
+      </ModernCard>
 
       {/* Modal */}
       <Dialog open={showModal} onOpenChange={setShowModal}>
