@@ -227,6 +227,7 @@ export type Database = {
           closed_at: string | null
           closing_balance: number | null
           created_at: string
+          current_shift_id: string | null
           difference: number | null
           expected_balance: number | null
           id: string
@@ -234,7 +235,10 @@ export type Database = {
           opened_at: string
           opening_balance: number
           operator_id: string
+          register_type: string
           status: Database["public"]["Enums"]["register_status"]
+          store_id: string | null
+          terminal_id: string | null
           total_cash: number
           total_credit: number
           total_debit: number
@@ -246,6 +250,7 @@ export type Database = {
           closed_at?: string | null
           closing_balance?: number | null
           created_at?: string
+          current_shift_id?: string | null
           difference?: number | null
           expected_balance?: number | null
           id?: string
@@ -253,7 +258,10 @@ export type Database = {
           opened_at?: string
           opening_balance?: number
           operator_id: string
+          register_type?: string
           status?: Database["public"]["Enums"]["register_status"]
+          store_id?: string | null
+          terminal_id?: string | null
           total_cash?: number
           total_credit?: number
           total_debit?: number
@@ -265,6 +273,7 @@ export type Database = {
           closed_at?: string | null
           closing_balance?: number | null
           created_at?: string
+          current_shift_id?: string | null
           difference?: number | null
           expected_balance?: number | null
           id?: string
@@ -272,7 +281,10 @@ export type Database = {
           opened_at?: string
           opening_balance?: number
           operator_id?: string
+          register_type?: string
           status?: Database["public"]["Enums"]["register_status"]
+          store_id?: string | null
+          terminal_id?: string | null
           total_cash?: number
           total_credit?: number
           total_debit?: number
@@ -280,7 +292,29 @@ export type Database = {
           total_pix?: number
           total_sales?: number
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "cash_registers_current_shift_id_fkey"
+            columns: ["current_shift_id"]
+            isOneToOne: false
+            referencedRelation: "register_shifts"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "cash_registers_store_id_fkey"
+            columns: ["store_id"]
+            isOneToOne: false
+            referencedRelation: "stores"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "cash_registers_terminal_id_fkey"
+            columns: ["terminal_id"]
+            isOneToOne: false
+            referencedRelation: "register_terminals"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       categories: {
         Row: {
@@ -1724,6 +1758,118 @@ export type Database = {
           },
         ]
       }
+      register_shifts: {
+        Row: {
+          cash_total: number | null
+          created_at: string | null
+          credit_total: number | null
+          debit_total: number | null
+          deposits_total: number | null
+          ended_at: string | null
+          ending_cash: number | null
+          fiado_total: number | null
+          id: string
+          notes: string | null
+          operator_id: string
+          pix_total: number | null
+          register_id: string
+          sales_count: number | null
+          sales_total: number | null
+          started_at: string
+          starting_cash: number
+          status: string
+          withdrawals_total: number | null
+        }
+        Insert: {
+          cash_total?: number | null
+          created_at?: string | null
+          credit_total?: number | null
+          debit_total?: number | null
+          deposits_total?: number | null
+          ended_at?: string | null
+          ending_cash?: number | null
+          fiado_total?: number | null
+          id?: string
+          notes?: string | null
+          operator_id: string
+          pix_total?: number | null
+          register_id: string
+          sales_count?: number | null
+          sales_total?: number | null
+          started_at?: string
+          starting_cash?: number
+          status?: string
+          withdrawals_total?: number | null
+        }
+        Update: {
+          cash_total?: number | null
+          created_at?: string | null
+          credit_total?: number | null
+          debit_total?: number | null
+          deposits_total?: number | null
+          ended_at?: string | null
+          ending_cash?: number | null
+          fiado_total?: number | null
+          id?: string
+          notes?: string | null
+          operator_id?: string
+          pix_total?: number | null
+          register_id?: string
+          sales_count?: number | null
+          sales_total?: number | null
+          started_at?: string
+          starting_cash?: number
+          status?: string
+          withdrawals_total?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "register_shifts_register_id_fkey"
+            columns: ["register_id"]
+            isOneToOne: false
+            referencedRelation: "cash_registers"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      register_terminals: {
+        Row: {
+          code: string
+          created_at: string | null
+          id: string
+          is_active: boolean | null
+          name: string
+          store_id: string | null
+          updated_at: string | null
+        }
+        Insert: {
+          code: string
+          created_at?: string | null
+          id?: string
+          is_active?: boolean | null
+          name: string
+          store_id?: string | null
+          updated_at?: string | null
+        }
+        Update: {
+          code?: string
+          created_at?: string | null
+          id?: string
+          is_active?: boolean | null
+          name?: string
+          store_id?: string | null
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "register_terminals_store_id_fkey"
+            columns: ["store_id"]
+            isOneToOne: false
+            referencedRelation: "stores"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       return_items: {
         Row: {
           created_at: string | null
@@ -1968,6 +2114,7 @@ export type Database = {
           quote_id: string | null
           register_id: string
           seller_id: string | null
+          shift_id: string | null
           status: Database["public"]["Enums"]["sale_status"]
           store_id: string | null
           subtotal: number
@@ -1989,6 +2136,7 @@ export type Database = {
           quote_id?: string | null
           register_id: string
           seller_id?: string | null
+          shift_id?: string | null
           status?: Database["public"]["Enums"]["sale_status"]
           store_id?: string | null
           subtotal?: number
@@ -2010,6 +2158,7 @@ export type Database = {
           quote_id?: string | null
           register_id?: string
           seller_id?: string | null
+          shift_id?: string | null
           status?: Database["public"]["Enums"]["sale_status"]
           store_id?: string | null
           subtotal?: number
@@ -2035,6 +2184,13 @@ export type Database = {
             columns: ["register_id"]
             isOneToOne: false
             referencedRelation: "cash_registers"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "sales_shift_id_fkey"
+            columns: ["shift_id"]
+            isOneToOne: false
+            referencedRelation: "register_shifts"
             referencedColumns: ["id"]
           },
           {

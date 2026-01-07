@@ -34,9 +34,13 @@ import { usePOSProducts } from '@/hooks/usePOSProducts';
 import { usePOSMode } from '@/hooks/usePOSMode';
 import { useFullscreen } from '@/hooks/useFullscreen';
 import { useCustomerPoints, usePointsCalculator, useLoyaltyMutations } from '@/hooks/useLoyalty';
+import { useActiveShift, useShiftMutations } from '@/hooks/useShifts';
+import { useSellers, Seller } from '@/hooks/useSellers';
 import { PaymentMethod } from '@/types/pos';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { LayoutGrid, List, ShoppingCart } from 'lucide-react';
+import { SellerSelector } from './SellerSelector';
+import { ShiftChangeModal } from './ShiftChangeModal';
 
 interface POSScreenProps {
   currentPage?: string;
@@ -48,6 +52,14 @@ export function POSScreen({ currentPage = 'pos', onNavigate }: POSScreenProps) {
   const { data: openRegister, isLoading: loadingRegister } = useOpenRegister();
   const { data: storeSettings } = useStoreSettings();
   const { openRegister: openRegisterMutation, closeRegister: closeRegisterMutation, createMovement } = useCashRegisterMutations();
+  
+  // Shift management
+  const { data: activeShift } = useActiveShift(openRegister?.id);
+  const { startShift, changeShift } = useShiftMutations();
+  
+  // Seller management
+  const [selectedSeller, setSelectedSeller] = useState<Seller | null>(null);
+  const [showShiftChangeModal, setShowShiftChangeModal] = useState(false);
   
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
   const [viewMode, setViewMode] = useState<'items' | 'products'>('items');
@@ -115,6 +127,8 @@ export function POSScreen({ currentPage = 'pos', onNavigate }: POSScreenProps) {
       payments,
       {
         registerId: openRegister.id,
+        shiftId: activeShift?.id,
+        sellerId: selectedSeller?.user_id,
         cartItems: cart.cartItems,
         customer: cart.customer,
         customerCpf: cart.customerCpf,
@@ -125,15 +139,34 @@ export function POSScreen({ currentPage = 'pos', onNavigate }: POSScreenProps) {
       },
       saleNumber,
       profile?.name || 'Operador',
-      storeSettings || undefined
+      storeSettings || undefined,
+      selectedSeller?.name
     );
-  }, [openRegister, checkout, cart, saleNumber, profile?.name, storeSettings]);
+  }, [openRegister, activeShift, selectedSeller, checkout, cart, saleNumber, profile?.name, storeSettings]);
 
   const handleOpenRegister = useCallback((amount: number) => {
     openRegisterMutation.mutate({ openingBalance: amount, registerNumber: 1 }, {
-      onSuccess: modals.closeModal,
+      onSuccess: (data) => {
+        // Start a shift automatically when opening register
+        if (data?.id) {
+          startShift.mutate({ registerId: data.id, startingCash: amount });
+        }
+        modals.closeModal();
+      },
     });
-  }, [openRegisterMutation, modals.closeModal]);
+  }, [openRegisterMutation, startShift, modals.closeModal]);
+
+  const handleShiftChange = useCallback((countedCash: number, notes?: string) => {
+    if (!activeShift || !openRegister) return;
+    changeShift.mutate({
+      currentShiftId: activeShift.id,
+      registerId: openRegister.id,
+      countedCash,
+      notes,
+    }, {
+      onSuccess: () => setShowShiftChangeModal(false),
+    });
+  }, [activeShift, openRegister, changeShift]);
 
   const handleCloseRegister = useCallback((closingBalance: number) => {
     if (!openRegister) return;
@@ -317,6 +350,13 @@ export function POSScreen({ currentPage = 'pos', onNavigate }: POSScreenProps) {
           cart.applyLoyaltyDiscount(points, discount);
           setIsLoyaltyModalOpen(false);
         }}
+      />
+
+      <ShiftChangeModal
+        isOpen={showShiftChangeModal}
+        onClose={() => setShowShiftChangeModal(false)}
+        onConfirm={handleShiftChange}
+        currentShift={activeShift || null}
       />
     </>
   );

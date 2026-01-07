@@ -5,6 +5,8 @@ import { toast } from 'sonner';
 
 interface CheckoutParams {
   registerId: string;
+  shiftId?: string;
+  sellerId?: string;
   cartItems: CartItem[];
   customer: Customer | null;
   customerCpf?: string;
@@ -27,6 +29,7 @@ interface UseCheckoutOptions {
     customer?: Customer | null;
     customerCpf?: string;
     operatorName: string;
+    sellerName?: string;
     storeName: string;
     storeAddress?: string;
     storeCnpj?: string;
@@ -48,7 +51,8 @@ export function useCheckout({ onSuccess, onShowReceipt }: UseCheckoutOptions) {
       address?: string | null;
       cnpj?: string | null;
       phone?: string | null;
-    }
+    },
+    sellerName?: string
   ) => {
     const receiptData = {
       saleNumber,
@@ -61,6 +65,7 @@ export function useCheckout({ onSuccess, onShowReceipt }: UseCheckoutOptions) {
       customer: params.customer,
       customerCpf: params.customerCpf,
       operatorName,
+      sellerName,
       storeName: storeSettings?.name || 'Minha Loja',
       storeAddress: storeSettings?.address || undefined,
       storeCnpj: storeSettings?.cnpj || undefined,
@@ -70,6 +75,8 @@ export function useCheckout({ onSuccess, onShowReceipt }: UseCheckoutOptions) {
 
     createSale.mutate({
       registerId: params.registerId,
+      shiftId: params.shiftId,
+      sellerId: params.sellerId,
       customerId: params.customer?.id,
       items: params.cartItems,
       payments,
